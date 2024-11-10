@@ -19,14 +19,18 @@ module.exports = {
       {
         version: "0.8.24",
         settings: {
+          evmVersion: "cancun",
           // viaIR: true,
           optimizer: {
             enabled: true,
-            runs: 200
+            runs: 200000
           },
         },
       }
     ]
+  },
+  compilers: {
+    solc: {}
   },
   defaultNetwork: 'hardhat',
   data: {
@@ -41,12 +45,13 @@ module.exports = {
   },
   networks: {
     hardhat: {
+      hardfork: "cancun",
       // forking: {
       //   // url: "https://mainnet.infura.io/v3/" + env.get('INFURA_API_KEY'),
       //   url: "https://optimism-mainnet.infura.io/v3/" + env.get('INFURA_API_KEY'),
       //   blockNumber: 126723376
       // },
-      allowUnlimitedContractSize: true,
+      allowUnlimitedContractSize: true
     },
     geni: {
       chainId: 31338,
@@ -101,8 +106,6 @@ module.exports = {
   },
   sourcify: {
     enabled: false
-  },
-  compilers: {
-    solc: {}
   }
+  
 };

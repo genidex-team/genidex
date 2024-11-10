@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import "./Storage.sol";
 import "./Helper.sol";
 
-abstract contract Balances is Storage{
+abstract contract Balances is Storage, ReentrancyGuardTransient{
 
     // event Deposit(address indexed sender, address indexed token, uint256 amount);
     // event Withdrawal(address indexed recipient, address indexed token, uint256 amount);
@@ -19,7 +20,7 @@ abstract contract Balances is Storage{
         // emit Deposit(msg.sender, address(0), msg.value);
     }
 
-    function withdrawEth(uint256 amount) external {
+    function withdrawEth(uint256 amount) external nonReentrant {
         if(amount <= 0){
             revert Helper.InvalidValue('BL21', amount);
         }
@@ -59,7 +60,7 @@ abstract contract Balances is Storage{
         balances[msg.sender][tokenAddress] += amount;
     }
 
-    function withdrawToken(address tokenAddress, uint256 amount) external {
+    function withdrawToken(address tokenAddress, uint256 amount) external nonReentrant {
         if(amount <= 0){
             revert Helper.InvalidValue('BL52', amount);
         }
