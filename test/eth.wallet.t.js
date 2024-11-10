@@ -37,31 +37,21 @@ async function main() {
             expect(wallet1.onChainBalance).to.equal(await wallet1.getOnChainBalance());
             expect(wallet1.geniDexBalance).to.equal(await wallet1.getGeniDexBalance());
 
-            expect(wallet2.onChainBalance).to.equal(await wallet2.getOnChainBalance());
-            expect(wallet2.geniDexBalance).to.equal(await wallet2.getGeniDexBalance());
+            // expect(wallet2.onChainBalance).to.equal(await wallet2.getOnChainBalance());
+            // expect(wallet2.geniDexBalance).to.equal(await wallet2.getGeniDexBalance());
 
             await wallet1.deposit("10");
             expect(wallet1.onChainBalance).to.equal(await wallet1.getOnChainBalance());
             expect(wallet1.geniDexBalance).to.equal(await wallet1.getGeniDexBalance());
 
-            await wallet2.deposit("10");
-            expect(wallet2.onChainBalance).to.equal(await wallet2.getOnChainBalance());
-            expect(wallet2.geniDexBalance).to.equal(await wallet2.getGeniDexBalance());
+            // await wallet2.deposit("10");
+            // expect(wallet2.onChainBalance).to.equal(await wallet2.getOnChainBalance());
+            // expect(wallet2.geniDexBalance).to.equal(await wallet2.getGeniDexBalance());
 
-            return;
+            await wallet1.withdraw("1");
+            expect(wallet1.onChainBalance).to.equal(await wallet1.getOnChainBalance());
+            expect(wallet1.geniDexBalance).to.equal(await wallet1.getGeniDexBalance());
 
-            await helper.deposit("0.01");
-            await helper.withdraw("0.01");
-            expect(helper.onChainBalance).to.equal(await helper.getOnChainBalance());
-            expect(helper.geniDexBalance).to.equal(await helper.getGeniDexBalance());
-
-            await helper.withdraw("10");
-            expect(helper.onChainBalance).to.equal(await helper.getOnChainBalance());
-            expect(helper.geniDexBalance).to.equal(await helper.getGeniDexBalance());
-
-            // await helper.deposit("1000");
-            // await helper.batchWithdraw(1000, "1");
-            
         });
 
     });

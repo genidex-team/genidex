@@ -60,7 +60,7 @@ class EthWalletHelper{
         let transaction = await this.geniDexContract.connect(this.account).withdrawEth(_amount);
         // transaction = await geniDexContract.connect(trader1).withdrawEth2(amount);
         // console.log(transaction);
-        fn.printGasUsed(transaction, '\nwithdraw');
+        fn.printGasUsed(transaction, '\nwithdraw '+amount+' ETH');
         let weiFee = await fn.getWeiFee(transaction);
         this.addWeiFee(weiFee);
         this.onChainBalance += _amount;

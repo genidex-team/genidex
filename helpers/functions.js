@@ -79,7 +79,7 @@ class Function{
         // console.log('transaction', transaction);
         // console.log('transactionReceipt', transactionReceipt);
         // const block = await provider.getBlock(transaction.blockNumber);
-        console.log('block.baseFeePerGas', block.baseFeePerGas)
+        // console.log('block.baseFeePerGas', block.baseFeePerGas)
         return gasUsed*gasPrice;
 
         // Calculate total fee
