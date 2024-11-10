@@ -17,7 +17,7 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: "0.8.20",
+        version: "0.8.24",
         settings: {
           // viaIR: true,
           optimizer: {
@@ -41,11 +41,11 @@ module.exports = {
   },
   networks: {
     hardhat: {
-      forking: {
-        // url: "https://mainnet.infura.io/v3/" + env.get('INFURA_API_KEY'),
-        url: "https://optimism-mainnet.infura.io/v3/" + env.get('INFURA_API_KEY'),
-        blockNumber: 126723376
-      },
+      // forking: {
+      //   // url: "https://mainnet.infura.io/v3/" + env.get('INFURA_API_KEY'),
+      //   url: "https://optimism-mainnet.infura.io/v3/" + env.get('INFURA_API_KEY'),
+      //   blockNumber: 126723376
+      // },
       allowUnlimitedContractSize: true,
     },
     geni: {
