@@ -135,6 +135,12 @@ abstract contract SellOrders is Storage, Points{
             if(market.isRewardable == true){
                 updatePoints(lv.quoteAddress, sellOrder.trader, totalTradeValue);
             }
+
+            // update market.price
+            if(block.timestamp - market.lastUpdatePrice > 300){
+                market.price = lastPrice;
+                market.lastUpdatePrice = block.timestamp;
+            }
         }
         return lastPrice;
     }

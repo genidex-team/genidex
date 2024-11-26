@@ -102,10 +102,6 @@ abstract contract BuyOrders is Storage, Points{
                 orderIndex = marketBuyOrders.length-1;
             }
         }
-        if(block.timestamp - market.lastUpdatePrice > 300){
-            market.price = lv.lastPrice;
-            market.lastUpdatePrice = block.timestamp;
-        }
         emit OnPlaceBuyOrder(marketId, buyOrder.trader, orderIndex,
             price, quantity, buyOrder.quantity, lv.lastPrice);
 
@@ -160,6 +156,12 @@ abstract contract BuyOrders is Storage, Points{
             //update geniPoints
             if(market.isRewardable == true){
                 updatePoints(lv.quoteAddress, buyOrder.trader, totalTradeValue);
+            }
+
+            // update market.price
+            if(block.timestamp - market.lastUpdatePrice > 300){
+                market.price = lastPrice;
+                market.lastUpdatePrice = block.timestamp;
             }
         }
         return (totalTradeValue, lastPrice);
