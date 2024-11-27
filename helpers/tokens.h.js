@@ -7,12 +7,22 @@ const data = require('./data');
 const erc20Abi = require('../data/erc20.abi.json');
 var deployer, trader1, trader2;
 
-const tokens = require('../../genidex_nodejs/data/'+network.name+'_tokens.json');
-
 class TokensHelper{
 
     constructor(){
-        this.tokens = tokens;
+        const defaultData = {};
+        const filePath = path.join(__dirname, '../../genidex_nodejs/data/'+network.name+'_tokens.json');
+        if (!fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2), 'utf8');
+            this.tokens = defaultData;
+        } else {
+            const fileContent = fs.readFileSync(filePath, 'utf8');
+            try {
+                this.tokens = JSON.parse(fileContent);
+            } catch (err) {
+                this.tokens = defaultData;
+            }
+        }
     }
 
     async init(){
