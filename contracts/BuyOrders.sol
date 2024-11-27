@@ -135,7 +135,7 @@ abstract contract BuyOrders is Storage, Points{
                 // storage
                 // sub tradeQuantity
                 sellOrder.quantity -= tradeQuantity;
-
+                buyOrder.quantity -= tradeQuantity;
                 // memory
                 totalTradeQuantity += tradeQuantity;
                 totalTradeValue += tradeValue;
@@ -149,7 +149,6 @@ abstract contract BuyOrders is Storage, Points{
             }
         }
         if(totalTradeValue>0){
-            buyOrder.quantity -= totalTradeQuantity;
             // credit (base token) the buyer's balance
             balances[buyOrder.trader][lv.baseAddress] += totalTradeQuantity;
 

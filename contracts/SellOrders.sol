@@ -108,10 +108,12 @@ abstract contract SellOrders is Storage, Points{
             }
             uint256 buyOrderID = buyOrderIDs[i];
             Order storage buyOrder = marketBuyOrders[buyOrderID];
-            if (buyOrder.price >= sellOrder.price && buyOrder.quantity>0) {
+            uint256 buyOrderPrice = buyOrder.price;
+            uint256 buyOrderQuantity = buyOrder.quantity;
+            if (buyOrderPrice >= sellOrder.price && buyOrderQuantity>0) {
 
-                uint256 tradeQuantity = Helper.min(buyOrder.quantity, sellOrder.quantity);
-                uint256 tradeValue = buyOrder.price * tradeQuantity / lv.marketDecimalsPower;
+                uint256 tradeQuantity = Helper.min(buyOrderQuantity, sellOrder.quantity);
+                uint256 tradeValue = buyOrderPrice * tradeQuantity / lv.marketDecimalsPower;
 
                 buyOrder.quantity -= tradeQuantity;
                 sellOrder.quantity -= tradeQuantity;
@@ -120,7 +122,7 @@ abstract contract SellOrders is Storage, Points{
                 totalTradeValue += tradeValue;
 
                 balances[buyOrder.trader][lv.baseAddress] += tradeQuantity;
-                lastPrice = buyOrder.price;
+                lastPrice = buyOrderPrice;
             }
             unchecked{
                 i++;
