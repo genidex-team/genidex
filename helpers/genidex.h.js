@@ -78,9 +78,17 @@ class GeniDexHelper{
     }
 
     async verify(address){
-        return run(`verify:verify`, {
-            address: address
-        });
+        try{
+            await run(`verify:verify`, {
+                address: address
+            });
+        }catch(error){
+            if (error.message.toLowerCase().includes("already verified")) {
+                console.log(`Contract at ${address} is already verified.`);
+            } else {
+                console.error("Verification failed:", error.message);
+            }
+        }
     }
 
     async getAllMarkets(){
