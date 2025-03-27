@@ -62,23 +62,22 @@ abstract contract Storage is Initializable {
 
     mapping(address => Token) public tokens;
 
-    // struct User {
-    //     uint256 geniPoints;
-    // }
-    mapping(address => uint256) public geniPoints;
-    uint256 public totalPoints;
+    mapping(address => uint256) public userPoints;
+    uint256 public totalUnclaimedPoints;
 
     uint256 public percentageFee;
     uint256 public feeDecimals;
     uint256 public feeDecimalsPower;
     address public feeReceiver;
 
+    address public geniRewarder;
+
     function __Storage_init() internal onlyInitializing {
         percentageFee = 100; //100/100,000*100 = 0.1%
         feeDecimals = 5;
         feeDecimalsPower = 10 ** feeDecimals;
         feeReceiver = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
-        totalPoints = 0;
+        totalUnclaimedPoints = 0;
     }
 
     function fee(uint256 amount) internal pure returns (uint256 result) {
@@ -108,9 +107,9 @@ abstract contract Storage is Initializable {
     // Function to subtract points from the total points
     function deductTotalPoints(uint256 points) external onlyGeniTokenContract {
         require(
-            points <= totalPoints,
+            points <= totalUnclaimedPoints,
             "Cannot subtract more than the current total points"
         );
-        totalPoints -= points;
+        totalUnclaimedPoints -= points;
     }
 }
