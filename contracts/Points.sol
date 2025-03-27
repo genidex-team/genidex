@@ -2,8 +2,18 @@
 pragma solidity ^0.8.24;
 
 import "./Storage.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract Points is Storage{
+abstract contract Points is Storage, OwnableUpgradeable {
+
+    modifier onlyRewarder() {
+        require(msg.sender == geniRewarder, "Only RewardDistributor can call");
+        _;
+    }
+
+    function setGeniRewarder(address _rewarder) external onlyOwner {
+        geniRewarder = _rewarder;
+    }
 
     function updatePoints(address quoteAddress, address traderAddress,
         uint256 totalTradeValue) internal {
@@ -29,8 +39,26 @@ abstract contract Points is Storage{
             }
         }
         if(points > 0){
-            geniPoints[traderAddress] += points;
-            totalPoints += points;
+            userPoints[traderAddress] += points;
+            totalUnclaimedPoints += points;
         }
+    }
+
+    function getTotalUnclaimedPoints() external view returns (uint256) {
+        return totalUnclaimedPoints;
+    }
+
+    function getUserPoints(address user) external view returns (uint256) {
+        return userPoints[user];
+    }
+
+    function deductUserPoints(address user, uint256 pointsToDeduct) external onlyRewarder {
+        require(userPoints[user] >= pointsToDeduct, "Not enough points");
+        userPoints[user] -= pointsToDeduct;
+        totalUnclaimedPoints -= pointsToDeduct;
+    }
+
+    function pointDecimals() public pure returns (uint8) {
+        return 6;
     }
 }
