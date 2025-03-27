@@ -63,7 +63,7 @@ async function main() {
         });
 
         it("PlaceBuyOrder - Unfilled Orders", async ()=>{
-            return;
+            // return;
             console.log("\n\n============ PlaceBuyOrder - Unfilled Orders ============");
 
             await ordersHelper.cancelAllBuyOrder(marketId);
@@ -115,7 +115,7 @@ async function main() {
             expect(await gBase2Balance()).to.equal(base2Balance - quantity );
             console.log('============\n\n');
         });
-        return;
+        // return;
         it("PlaceBuyOrder - Partially Filled Orders", async ()=>{
             // return;
             console.log("\n\n============ PlaceBuyOrder - Partially Filled Orders ============");

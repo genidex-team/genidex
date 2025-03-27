@@ -4,6 +4,9 @@ const path = require('path');
 const fs = require('fs')
 const fn = require('./functions');
 const data = require('./data');
+
+const dataV2 = require('../../geni_data/index');
+
 var geniDexContract;
 
 class GeniDexHelper{
@@ -34,6 +37,7 @@ class GeniDexHelper{
         await geniDexContract.waitForDeployment();
         console.log('\nGeniDex deployed to:', geniDexContract.target);
         data.set('geniDexAddress', geniDexContract.target);
+        dataV2.setGeniDexAddress(network.name, geniDexContract.target);
 
         this.updateGenidexAddress(geniDexContract.target);
 
@@ -53,6 +57,7 @@ class GeniDexHelper{
         const GeniDex = await ethers.getContractFactory('GeniDex');
         console.log('Upgrading GeniDex...');
         const geniDexContract = await upgrades.upgradeProxy(proxyAddress, GeniDex, {kind: 'uups'});
+        dataV2.setGeniDexAddress(network.name, geniDexContract.target);
         console.log('GeniDex upgraded. Proxy address:', geniDexContract.target);
         // console.log(geniDex.deployTransaction);
         await fn.printGasUsed(geniDexContract.deployTransaction, 'upgradeProxy');
@@ -74,6 +79,7 @@ class GeniDexHelper{
 
     async getContract(){
         const geniDexAddress = data.get('geniDexAddress');
+        console.log('geniDexAddress', geniDexAddress)
         return await ethers.getContractAt('GeniDex', geniDexAddress);
     }
 

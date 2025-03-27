@@ -55,10 +55,10 @@ class BuyOrdersHelper {
                 const decodedError = geniDexContract.interface.parseError(error.data.result);
                 // console.log(decodedError);
                 console.log(decodedError.args.toString());
-                let {code, total, minimumRequired} = decodedError.args;
-                console.log('code, total, minimumRequired:', code, total, minimumRequired);
+                let {code, available, required} = decodedError.args;
+                console.log('code, available, required:', code, available, required);
                 console.error(`Transaction failed: ${decodedError?.name}`)
-                process.exit(1);
+                // process.exit(1);
             }else{
                 console.log(error)
             }
@@ -107,17 +107,34 @@ class BuyOrdersHelper {
         let filledSellOrderID = await this.randomFilledSellOrderID(marketId);
         // console.log('filledSellOrderID', filledSellOrderID)
         // console.log(marketId, price, quantity, filledSellOrderID, buyOrderIDs);
-        let transaction = await geniDexContract.connect(account).placeSellOrder(marketId, price, quantity, filledSellOrderID, buyOrderIDs);
-        await fn.printGasUsed(transaction, 'placeSellOrder');
-        const receipt = await transaction.wait();
-        // console.log(receipt.logs);
-        for(var i in receipt.logs){
-            var log = receipt.logs[i];
-            if (log.fragment.name === "OnPlaceSellOrder") {
-                // console.log("OnPlaceBuyOrder:", log.args.orderIndex);
-                return log.args.orderIndex;
+        try{
+            let transaction = await geniDexContract.connect(account)
+            .placeSellOrder(marketId, price, quantity, filledSellOrderID, buyOrderIDs);
+            await fn.printGasUsed(transaction, 'placeSellOrder');
+            const receipt = await transaction.wait();
+            // console.log(receipt.logs);
+            for(var i in receipt.logs){
+                var log = receipt.logs[i];
+                if (log.fragment.name === "OnPlaceSellOrder") {
+                    // console.log("OnPlaceBuyOrder:", log.args.orderIndex);
+                    return log.args.orderIndex;
+                }
+            }
+        }catch(error){
+            // console.log(error.data);
+            if(error.data){
+                const decodedError = geniDexContract.interface.parseError(error.data.result);
+                // console.log(decodedError);
+                console.log(decodedError.args.toString());
+                let {code, available, required} = decodedError.args;
+                console.log('code, available, required:', code, available, required);
+                console.error(`Transaction failed: ${decodedError?.name}`)
+                // process.exit(1);
+            }else{
+                console.log(error)
             }
         }
+        
     }
 
     async cancelBuyOrder(account, marketId, orderIndex) {

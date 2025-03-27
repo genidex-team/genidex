@@ -55,10 +55,10 @@ class TokensHelper{
     }
 
     async verify(address, name, symbol, decimals){
-        const initialSupply = ethers.parseUnits("10000000000", decimals);
+        const initialSupply = ethers.parseUnits("20000000000", decimals);
         await run(`verify:verify`, {
             address: address,
-            constructorArguments: [name, symbol, initialSupply, decimals],
+            constructorArguments: [name, symbol, initialSupply.toString(), decimals],
         });
     }
 

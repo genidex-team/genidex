@@ -20,9 +20,9 @@ async function main() {
     
     before(async ()=>{
         [deployer, trader1, trader2, feeReceiver] = await ethers.getSigners();
+        console.log('trader1 - buyer:', trader1.address);
+        console.log('trader2 - buyer:', trader2.address);
         // console.log('feeReceiver', feeReceiver.address);
-        baseAddress = data.get('opAddress');
-        quoteAddress = data.get('usdtAddress');
         market = new Market(marketId);
         baseAddress = market.data.baseAddress;
         quoteAddress = market.data.quoteAddress;
@@ -48,7 +48,7 @@ async function main() {
         it("Deposit", async ()=>{
 
             let gQuote1Balance = await tokenWalletHelper.getGeniDexBalance('trader1', quoteAddress, trader1, true);
-            if(gQuote1Balance=="0.0"){
+            // if(gQuote1Balance=="0.0"){
                 await tokenWalletHelper.deposit(quoteAddress, trader1, initAmount);
                 await tokenWalletHelper.deposit(baseAddress, trader2, initAmount);
 
@@ -57,10 +57,10 @@ async function main() {
                 
                 // await tokenWalletHelper.getOnChainBalance(baseAddress, trader2);
                 await tokenWalletHelper.getGeniDexBalance('trader2', baseAddress, trader2);
-            }
+            // }
             
         });
-
+        // return;
         it("Buy", async ()=>{
             // expect(await gQuote1Balance()).to.equal(initAmount);
             // expect(await gBase1Balance()).to.equal("0.0");
@@ -102,23 +102,24 @@ async function main() {
 }
 
 async function testPlaceSellOrder(){
-    // await buy(3, 1);
-    // await buy(3.1, 1);
-    // await buy(3.2, 1);
-    // await buy(3.3, 1);
-    // await buy(3.4, 1);
-    // console.log('buyOrders', await ordersHelper.getDescFormatBuyOrders(marketId) );
+    let price = market.parsePrice(1);
+    let quantity = market.parseQuantity(1);
+    await buy(price, quantity);
+    // await buy(price, quantity);
+    // await buy(price, quantity);
+    // await buy(price, quantity);
+    // await buy(price, quantity);
+    // await buy(price, quantity);
+    // await buy(price, quantity);
+    // await buy(price, quantity);
+    // await buy(price, quantity);
+    // await buy(price, quantity);
+    // console.log('sellOrders', await ordersHelper.getAscFormatSellOrders(marketId) );
 
     // await sell(3, 1);
-    // await sell(3, 1);
-    // await buy(3, 1);
-
-
-    await gBase2Balance();
-    await sell(3, 5);//total = 3*10
-    await gBase2Balance();
-    await cancelSellOrder(0);
-    await gBase2Balance();
+    // await gQuote1Balance();
+    quantity = market.parseQuantity(1);
+    await sell(price, quantity);
 
     // match 0, old order index: 13.07 USD v
     // match 5, no order index: 18.03 USD v
@@ -130,7 +131,7 @@ async function testPlaceSellOrder(){
 
 async function testPlaceBuyOrder(){
 
-    let price = market.parsePrice(0.000025);
+    let price = market.parsePrice(1);
     let quantity = market.parseQuantity(1);
     await sell(price, quantity);
     await sell(price, quantity);

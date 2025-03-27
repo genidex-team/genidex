@@ -54,7 +54,7 @@ module.exports = {
       allowUnlimitedContractSize: true
     },
     geni: {
-      chainId: 31338,
+      chainId: 31339,
       url: "https://rpc.genidex.net"
     },
     ganache_eth_mainnet: {
