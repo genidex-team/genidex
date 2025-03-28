@@ -13,8 +13,31 @@ abstract contract Tokens is Storage, OwnableUpgradeable{
         tokens[tokenAddress].isUSD = isUSD;
         tokens[tokenAddress].decimals = token.decimals();
     }
-    //updateTokenIsUSD
+
     function updateUSDMarketID(address tokenAddress, uint256 marketID) public onlyOwner{
         tokens[tokenAddress].usdMarketID = marketID;
     }
+
+    struct TokenInfo {
+        address tokenAddress;
+        bool isUSD;
+        uint8 decimals;
+        uint256 usdMarketID;
+    }
+
+    function getTokensInfo(address[] calldata tokenAddresses) external view returns (TokenInfo[] memory) {
+        uint256 length = tokenAddresses.length;
+        TokenInfo[] memory result = new TokenInfo[](length);
+        for (uint256 i = 0; i < length; i++) {
+            Token memory info = tokens[tokenAddresses[i]];
+            result[i] = TokenInfo({
+                tokenAddress: tokenAddresses[i],
+                isUSD: info.isUSD,
+                decimals: info.decimals,
+                usdMarketID: info.usdMarketID
+            });
+        }
+        return result;
+    }
+
 }
