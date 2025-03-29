@@ -18,8 +18,6 @@ abstract contract Storage is Initializable {
         bool isRewardable;
     }
 
-    address public geniTokenAddress;
-
     uint256 public marketCounter;
 
     /**
@@ -84,32 +82,5 @@ abstract contract Storage is Initializable {
         // result = amount*percentageFee/feeDecimalsPower;
         // 0.1% = 0.001 = 1/1000
         result = amount / 1000;
-    }
-
-    // Assign the GeniToken address, can only be called once
-    function setGeniTokenAddress(address _geniTokenAddress) external {
-        require(
-            geniTokenAddress == address(0),
-            "GeniToken address has been set"
-        );
-        geniTokenAddress = _geniTokenAddress;
-    }
-
-    // Modifier to restrict this function to be callable only by the GeniToken contract
-    modifier onlyGeniTokenContract() {
-        require(
-            msg.sender == geniTokenAddress,
-            "Only the GeniToken contract can call this function"
-        );
-        _;
-    }
-
-    // Function to subtract points from the total points
-    function deductTotalPoints(uint256 points) external onlyGeniTokenContract {
-        require(
-            points <= totalUnclaimedPoints,
-            "Cannot subtract more than the current total points"
-        );
-        totalUnclaimedPoints -= points;
     }
 }
