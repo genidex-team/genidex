@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardTransientUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {Helper} from "./Helper.sol";
 
-abstract contract Storage is Initializable {
+abstract contract Storage is Initializable, ReentrancyGuardTransientUpgradeable {
     struct Market {
         uint256 id;
         string symbol;

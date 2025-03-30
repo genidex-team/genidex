@@ -23,6 +23,8 @@ contract GeniDex is Initializable, OwnableUpgradeable, UUPSUpgradeable, Markets,
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
         __Storage_init();
+        // __Balances_init();
+        __ReentrancyGuardTransient_init();
     }
 
     function _authorizeUpgrade(address newImplementation)

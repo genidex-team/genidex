@@ -2,18 +2,17 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardTransientUpgradeable.sol";
 // import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "./Storage.sol";
 import "./Helper.sol";
 
-abstract contract Balances is Storage, ReentrancyGuardTransientUpgradeable{
+abstract contract Balances is Storage{
 
     // event Deposit(address indexed sender, address indexed token, uint256 amount);
     // event Withdrawal(address indexed recipient, address indexed token, uint256 amount);
 
     // Ether
-    function depositEth() external payable {
+    function depositEth() external payable nonReentrant {
         if(msg.value <= 0){
             revert Helper.InvalidValue('BL16', msg.value);
         }
@@ -47,7 +46,7 @@ abstract contract Balances is Storage, ReentrancyGuardTransientUpgradeable{
     }
 
     // Token
-    function depositToken(address tokenAddress, uint256 amount) external {
+    function depositToken(address tokenAddress, uint256 amount) external nonReentrant {
         IERC20 token = IERC20(tokenAddress);
         if(token.transferFrom(msg.sender, address(this), amount) != true) {
             revert Helper.TokenTransferFailed({
