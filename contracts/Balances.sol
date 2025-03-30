@@ -2,11 +2,12 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardTransientUpgradeable.sol";
+// import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "./Storage.sol";
 import "./Helper.sol";
 
-abstract contract Balances is Storage, ReentrancyGuardTransient{
+abstract contract Balances is Storage, ReentrancyGuardTransientUpgradeable{
 
     // event Deposit(address indexed sender, address indexed token, uint256 amount);
     // event Withdrawal(address indexed recipient, address indexed token, uint256 amount);
