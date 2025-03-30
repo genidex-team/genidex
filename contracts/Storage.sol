@@ -63,13 +63,12 @@ abstract contract Storage is Initializable {
     mapping(address => uint256) public userPoints;
     uint256 public totalUnclaimedPoints;
 
-    address public feeReceiver;
+    address public constant feeReceiver = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
 
     address public geniRewarder;
 
     function __Storage_init() internal onlyInitializing {
         marketCounter = 0;
-        feeReceiver = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
         totalUnclaimedPoints = 0;
     }
 
