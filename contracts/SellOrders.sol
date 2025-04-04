@@ -56,7 +56,7 @@ abstract contract SellOrders is Storage, Points{
             && referrer != msg.sender)
         {
             userReferrer[msg.sender] = referrer;
-            userReferrals[referrer].push(msg.sender);
+            refereesOf[referrer].push(msg.sender);
         }
 
         lv.total = price * quantity / lv.marketDecimalsPower;

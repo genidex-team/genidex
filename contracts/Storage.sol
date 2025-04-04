@@ -65,7 +65,7 @@ abstract contract Storage is Initializable, ReentrancyGuardTransientUpgradeable 
     mapping(address => uint256) public userPoints;
     uint256 public totalUnclaimedPoints;
     mapping(address => address) public userReferrer; // referral => referrer
-    mapping(address => address[]) public userReferrals; // referrer => [referrals]
+    mapping(address => address[]) public refereesOf; // referrer => [referees]
 
     address public constant feeReceiver = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
 
@@ -87,6 +87,6 @@ abstract contract Storage is Initializable, ReentrancyGuardTransientUpgradeable 
         require(_referrer != address(0), "Invalid referrer address");
         require(_referrer != msg.sender, "Cannot refer yourself");
         userReferrer[msg.sender] = _referrer;
-        userReferrals[_referrer].push(msg.sender);
+        refereesOf[_referrer].push(msg.sender);
     }
 }
