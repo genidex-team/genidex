@@ -41,6 +41,13 @@ abstract contract Points is Storage, OwnableUpgradeable {
         if(points > 0){
             userPoints[traderAddress] += points;
             totalUnclaimedPoints += points;
+
+            address ref = userReferrer[traderAddress];
+            if (ref != address(0)) {
+                uint256 refPoints = points * 30 / 100;
+                userPoints[ref] += refPoints;
+                totalUnclaimedPoints += refPoints;
+            }
         }
     }
 

@@ -48,7 +48,8 @@ abstract contract BuyOrders is Storage, Points{
     }
 
     function placeBuyOrder(uint256 marketId, uint256 price, uint256 quantity,
-        uint256 filledOrderId, uint256[] calldata sellOrderIDs) external nonReentrant
+        uint256 filledOrderId, uint256[] calldata sellOrderIDs,
+        address referrer) external nonReentrant
     {
         Market storage market = markets[marketId];
         //lv: local variable
@@ -67,6 +68,16 @@ abstract contract BuyOrders is Storage, Points{
             price: price,
             quantity: quantity
         });
+
+        //set referrer
+        if (userReferrer[msg.sender] == address(0)
+            && referrer != address(0)
+            && referrer != msg.sender)
+        {
+            userReferrer[msg.sender] = referrer;
+            userReferrals[referrer].push(msg.sender);
+        }
+
         lv.total = price * quantity / lv.marketDecimalsPower;
         if (lv.total < 1) {
             revert Helper.TotalTooSmall('BO68', lv.total, 1);
