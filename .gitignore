@@ -1,10 +1,10 @@
 node_modules
 .env
 package-lock.json
+artifacts
 # Hardhat files
 /cache
-/artifacts
-contracts/artifacts
+
 
 # TypeChain files
 /typechain

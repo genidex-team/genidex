@@ -7,6 +7,7 @@ const markets = require('./markets.h');
 const tokens = require('../../genidex_nodejs/data/' + network.name + '_tokens.json');
 
 var geniDexContract, geniDexAddress;
+var deployer, trader1, trader2;
 
 class BuyOrdersHelper {
 
@@ -16,7 +17,10 @@ class BuyOrdersHelper {
         geniDexContract = await geniDexHelper.getContract();
     }
 
-    async placeBuyOrder(account, marketId, price, quantity) {
+    async placeBuyOrder(account, marketId, price, quantity, referrer) {
+        if(!referrer){
+            referrer = ethers.ZeroAddress;
+        }
         let market = markets.getMarket(marketId);
         let { baseAddress, quoteAddress } = market;
         let baseDecimals = tokens[baseAddress].decimals;
@@ -32,13 +36,12 @@ class BuyOrdersHelper {
         let sellOrderIDs = await this.getSellOrderIDsMatchingBuyOrder(marketId, { price: price, quantity: quantity });
         // console.log('sellOrderIDs', sellOrderIDs);
         let filledBuyOrderID = await this.randomFilledBuyOrderID(marketId);
-        // console.log('filledBuyOrderID', filledBuyOrderID);
-        console.log('sellOrderIDs', sellOrderIDs)
-        console.log('filledBuyOrderID', filledBuyOrderID)
+        // console.log('sellOrderIDs', sellOrderIDs)
+        // console.log('filledBuyOrderID', filledBuyOrderID)
         // console.log('placeBuyOrder', {price: price_, quantity: quantity_});
         try{
             let transaction = await geniDexContract.connect(account)
-            .placeBuyOrder(marketId, price, quantity, filledBuyOrderID, sellOrderIDs);
+            .placeBuyOrder(marketId, price, quantity, filledBuyOrderID, sellOrderIDs, referrer);
             await fn.printGasUsed(transaction, 'placeBuyOrder');
             const receipt = await transaction.wait();
             // console.log(receipt.logs);
@@ -50,18 +53,7 @@ class BuyOrdersHelper {
                 }
             }
         }catch(error){
-            // console.log(error.data);
-            if(error.data){
-                const decodedError = geniDexContract.interface.parseError(error.data.result);
-                // console.log(decodedError);
-                console.log(decodedError.args.toString());
-                let {code, available, required} = decodedError.args;
-                console.log('code, available, required:', code, available, required);
-                console.error(`Transaction failed: ${decodedError?.name}`)
-                // process.exit(1);
-            }else{
-                console.log(error)
-            }
+            geniDexHelper.throwError(error);
         }
     }
     
@@ -90,7 +82,10 @@ class BuyOrdersHelper {
         await fn.printGasUsed(transaction, 'placeBuyOrder');
     }
 
-    async placeSellOrder(account, marketId, price, quantity) {
+    async placeSellOrder(account, marketId, price, quantity, referrer) {
+        if(!referrer){
+            referrer = ethers.ZeroAddress;
+        }
         let market = markets.getMarket(marketId);
         let { baseAddress, quoteAddress } = market;
         let baseDecimals = tokens[baseAddress].decimals;
@@ -109,7 +104,7 @@ class BuyOrdersHelper {
         // console.log(marketId, price, quantity, filledSellOrderID, buyOrderIDs);
         try{
             let transaction = await geniDexContract.connect(account)
-            .placeSellOrder(marketId, price, quantity, filledSellOrderID, buyOrderIDs);
+            .placeSellOrder(marketId, price, quantity, filledSellOrderID, buyOrderIDs, referrer);
             await fn.printGasUsed(transaction, 'placeSellOrder');
             const receipt = await transaction.wait();
             // console.log(receipt.logs);
@@ -121,18 +116,7 @@ class BuyOrdersHelper {
                 }
             }
         }catch(error){
-            // console.log(error.data);
-            if(error.data){
-                const decodedError = geniDexContract.interface.parseError(error.data.result);
-                // console.log(decodedError);
-                console.log(decodedError.args.toString());
-                let {code, available, required} = decodedError.args;
-                console.log('code, available, required:', code, available, required);
-                console.error(`Transaction failed: ${decodedError?.name}`)
-                // process.exit(1);
-            }else{
-                console.log(error)
-            }
+            geniDexHelper.throwError(error);
         }
         
     }
@@ -140,16 +124,27 @@ class BuyOrdersHelper {
     async cancelBuyOrder(account, marketId, orderIndex) {
         // let market = markets.getMarket(marketId);
         // let { baseAddress, quoteAddress } = market;
-        let transaction = await geniDexContract.connect(account).cancelBuyOrder(marketId, orderIndex);
-        await fn.printGasUsed(transaction, 'cancelBuyOrder');
+        // try{
+            let transaction = await geniDexContract.connect(account).cancelBuyOrder(marketId, orderIndex);
+            await fn.printGasUsed(transaction, 'cancelBuyOrder');
+        // }catch(error){
+        //     console.log(`error`, error)
+        //     geniDexHelper.throwError(error);
+        // }
+        
     }
 
     async cancelSellOrder(account, marketId, orderIndex) {
         // let market = markets.getMarket(marketId);
         // let { baseAddress, quoteAddress } = market;
         // console.log('\n\n===cancelSellOrder');
-        let transaction = await geniDexContract.connect(account).cancelSellOrder(marketId, orderIndex);
-        await fn.printGasUsed(transaction, 'cancelSellOrder');
+        try{
+            let transaction = await geniDexContract.connect(account).cancelSellOrder(marketId, orderIndex);
+            await fn.printGasUsed(transaction, 'cancelSellOrder');
+        }catch(error){
+            // console.log(error);
+            geniDexHelper.throwError(error);
+        }
     }
 
     async getBuyOrders(marketId) {
@@ -168,17 +163,7 @@ class BuyOrdersHelper {
             }
             return buyOrders;
         }catch(error){
-            if(error.data){
-                const decodedError = geniDexContract.interface.parseError(error.data);
-                console.log(decodedError);
-                // console.log(decodedError.args.toString());
-                // let {code, total, minimumRequired} = decodedError.args;
-                // console.log('code, total, minimumRequired:', code, total, minimumRequired);
-                // console.error(`Transaction failed: ${decodedError?.name}`)
-                // process.exit(1);
-            }else{
-                console.log(error)
-            }
+            geniDexHelper.throwError(error);
         }
         
     }
@@ -345,7 +330,7 @@ class BuyOrdersHelper {
     async cancelAllSellOrder(marketId){
         // console.log('\n===cancelAllSellOrder===')
         let sellOrders = await this.getSellOrders(marketId);
-        // console.log('sellOrders', sellOrders);
+        console.log('sellOrders', sellOrders);
         for(var i in sellOrders){
             var sellOrder = sellOrders[i];
             if(sellOrder.quantity>0){

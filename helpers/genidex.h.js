@@ -7,6 +7,14 @@ const data = require('./data');
 
 const dataV2 = require('../../geni_data/index');
 
+class GeniDexError extends Error {
+    constructor(message, data) {
+        super(message);
+        this.name = "GeniDexError";
+        this.data = data;
+    }
+}
+
 var geniDexContract;
 
 class GeniDexHelper{
@@ -19,10 +27,10 @@ class GeniDexHelper{
     async init(){
         console.log('GeniDexHelper init');
         geniDexContract = await this.getContract();
-        this.percentageFee = await geniDexContract.percentageFee();
-        console.log(this.percentageFee);
-        this.feeDecimals = await geniDexContract.feeDecimals();
-        console.log(this.feeDecimals);
+        // this.percentageFee = await geniDexContract.percentageFee();
+        // console.log(this.percentageFee);
+        // this.feeDecimals = await geniDexContract.feeDecimals();
+        // console.log(this.feeDecimals);
         
     }
 
@@ -79,7 +87,7 @@ class GeniDexHelper{
 
     async getContract(){
         const geniDexAddress = data.get('geniDexAddress');
-        console.log('geniDexAddress', geniDexAddress)
+        // console.log('geniDexAddress', geniDexAddress)
         return await ethers.getContractAt('GeniDex', geniDexAddress);
     }
 
@@ -145,6 +153,28 @@ class GeniDexHelper{
         }else{
             console.error(geniDataFile, 'not exists')
         }
+    }
+
+    throwError(error) {
+        const iface = geniDexContract.interface;
+        const errorData = error?.data?.data || error?.data || error?.error?.data;
+        if (!errorData){
+            console.error(error);
+            let name = error.code || error.message || error.shortMessage;
+            throw new GeniDexError(name, error);
+        };
+        const decoded = iface.parseError(errorData);
+        const args = {};
+        for (let i = 0; i < decoded.fragment.inputs.length; i++) {
+            const input = decoded.fragment.inputs[i];
+            args[input.name] = decoded.args[i];
+        }
+        let result = {
+            errorName: decoded.name,
+            args
+        };
+        console.error(result);
+        throw new GeniDexError(decoded.name, result);
     }
 
 }

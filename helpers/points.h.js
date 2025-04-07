@@ -7,7 +7,7 @@ class Points {
 
     async getPoints(address){
         const geniDexContract = await geniDexHelper.getContract();
-        var points = await geniDexContract.geniPoints(address);
+        var points = await geniDexContract.userPoints(address);
         return points;
     }
 

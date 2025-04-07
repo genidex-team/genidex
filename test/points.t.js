@@ -30,6 +30,7 @@ async function main() {
         price = market.parsePrice('2500');
         quantity = market.parseQuantity('1');
         total = market.total(price, quantity);
+        geniDexHelper.init();
     });
 
     describe('Trade', () => {
@@ -70,6 +71,7 @@ async function main() {
             console.log('============\n\n');
         });
 
+        // return;
         it("PlaceSellOrder - Fully Filled Orders", async ()=>{
             // return;
             console.log("\n\n============ PlaceSellOrder - Fully Filled Orders ============");
@@ -112,7 +114,7 @@ async function gPoints2(){
 }
 
 function formatPoint(points){
-    return parseFloat(pointsHelper.format(points));
+    return (pointsHelper.format(points));
 }
 
 async function buy(price, quantity){

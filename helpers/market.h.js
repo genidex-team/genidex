@@ -25,7 +25,7 @@ class Market{
     constructor(marketId){
         this.marketId = marketId;
         this.data = markets.getMarket(marketId);
-        console.log(this.data);
+        // console.log(this.data);
     }
 
     async getPrice(marketId){

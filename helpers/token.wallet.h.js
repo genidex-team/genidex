@@ -19,6 +19,37 @@ class TokenWalletHelper{
         geniDexContract = await geniDexHelper.getContract();
     }
 
+    async widthdraw(tokenAddress, account, amount){
+        var decimals, symbol, balance, transaction;
+        console.log(tokenAddress);
+        // try{
+            if(tokenAddress == ethers.ZeroAddress){
+                decimals = 18;
+                symbol = 'ETH';
+                balance = await ethers.provider.getBalance(account.address);
+                var _amount = ethers.parseUnits(amount, decimals);
+                transaction = await geniDexContract.connect(account).withdrawEth(_amount);
+            }else {
+                let token = new ethers.Contract(tokenAddress, erc20Abi, account);
+                decimals = await token.decimals();
+                symbol = await token.symbol();
+                var _amount = ethers.parseUnits(amount, decimals);
+                try{
+                    transaction = await geniDexContract.connect(account).withdrawToken(tokenAddress, _amount);
+                }catch(error){
+                    console.dir(error, { depth: null });
+                    console.log(typeof error, error)
+                }
+                
+            }
+        // }catch(error){
+        //     // console.error('Transaction failed===:', error);
+        //     JSON.stringify(error, null, 2)
+        // }
+        
+        fn.printGasUsed(transaction, 'widthdraw '+amount + ' ' + symbol );
+    }
+
     async deposit(tokenAddress, account, amount){
         var decimals, symbol, balance, transaction;
         // console.log(tokenAddress);
