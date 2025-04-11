@@ -28,6 +28,7 @@ async function main() {
             // geniDexContract = await geniDexHelper.deploy();
             geniDexContract = await geniDexHelper.upgrade();
             geniDexAddress = geniDexContract.target;
+            await geniDexHelper.init();
             await wallet1.init();
             await wallet2.init();
         });

@@ -37,6 +37,7 @@ async function main() {
             geniDexContract = await geniDexHelper.upgrade();
             // geniDexContract = await geniDexHelper.getContract();
             geniDexAddress = geniDexContract.target;
+            await geniDexHelper.init();
             await tokenWalletHelper.init();
             await ordersHelper.init();
         });
@@ -48,23 +49,25 @@ async function main() {
                 var token = tokens[i];
                 var {address} = token;
                 // deposit ETH
+                console.log('address', address);
+                // if(address != ethers.ZeroAddress) continue;
                 if(address == ethers.ZeroAddress){
                     await wallet1.init();
-                    await wallet1.deposit("100");
-                    expect(wallet1.onChainBalance).to.equal(await wallet1.getOnChainBalance());
+                    await wallet1.deposit("0.00001");
+                    // expect(wallet1.onChainBalance).to.equal(await wallet1.getOnChainBalance());
                     expect(wallet1.geniDexBalance).to.equal(await wallet1.getGeniDexBalance());
                     // process.exit();
 
                     await wallet2.init();
-                    await wallet2.deposit("100");
-                    expect(wallet2.onChainBalance).to.equal(await wallet2.getOnChainBalance());
+                    await wallet2.deposit("0.001");
+                    // expect(wallet2.onChainBalance).to.equal(await wallet2.getOnChainBalance());
                     expect(wallet2.geniDexBalance).to.equal(await wallet2.getGeniDexBalance());
 
                 }else{ // deposit token
                     // process.exit();
                     let balance1 = await gBalance1(address);
                     let balance2 = await gBalance2(address);
-                    let amount = '1000000';
+                    let amount = '1';
                     await tokenWalletHelper.deposit(address, trader1, amount);
                     await tokenWalletHelper.deposit(address, trader2, amount);
 

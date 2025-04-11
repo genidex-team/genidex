@@ -39,9 +39,11 @@ class EthWalletHelper{
         let weiFee = await this.getWeiFee(transaction);
         // console.log('_amount', _amount);
         // console.log('weiFee', weiFee);
+        // console.log(`onChainBalance: ${this.onChainBalance} - ${_amount} - ${weiFee} = `);
         this.addWeiFee(weiFee);
         this.onChainBalance -= _amount;
         this.geniDexBalance += _amount;
+        // console.log(`onChainBalance: ${this.onChainBalance}`);
     }
 
     async getWeiFee(transaction){
@@ -52,6 +54,9 @@ class EthWalletHelper{
         // console.log('transactionReceipt', transactionReceipt);
         // const block = await provider.getBlock(transaction.blockNumber);
         // console.log('block.baseFeePerGas', block.baseFeePerGas)
+        // console.log(transactionReceipt);
+        // const l1Fee = await this.getL1Fee(transactionReceipt.hash);
+        // console.log('l1Fee', l1Fee)
         return gasPrice * gasUsed;
     }
 

@@ -44,6 +44,7 @@ async function main() {
             geniDexContract = await geniDexHelper.upgrade();
             // geniDexContract = await geniDexHelper.getContract();
             geniDexAddress = geniDexContract.target;
+            await geniDexHelper.init();
             await tokenWalletHelper.init();
             await ordersHelper.init();
         });
