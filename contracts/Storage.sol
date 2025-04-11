@@ -49,6 +49,7 @@ abstract contract Storage is Initializable, ReentrancyGuardTransientUpgradeable 
     mapping(uint256 => Order[]) public sellOrders;
 
     // mapping(address => uint256) public ethBalances;
+    // balances[userAddress][tokenAddress]
     mapping(address => mapping(address => uint256)) balances;
 
     // mapping(address => bool) public usdTokens;

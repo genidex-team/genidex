@@ -22,7 +22,8 @@ abstract contract SellOrders is Storage, Points{
         uint256 price,
         uint256 quantity,
         uint256 remainingQuantity,
-        uint256 lastPrice
+        uint256 lastPrice,
+        address referrer
     );
     /*struct InputPlaceSellOrder {
         uint256 marketId;
@@ -86,20 +87,18 @@ abstract contract SellOrders is Storage, Points{
         sellerBalances[lv.baseAddress] -= quantity;
 
         uint256 remainingValue = price * sellOrder.quantity / lv.marketDecimalsPower;
+        uint256 orderIndex = 0;
         if(remainingValue>0){
             if(filledOrderId < marketSellOrders.length && marketSellOrders[filledOrderId].quantity<=0){
                 marketSellOrders[filledOrderId] = sellOrder;
-                emit OnPlaceSellOrder(marketId, sellOrder.trader, filledOrderId,
-                    price, quantity, sellOrder.quantity, lastPrice);
+                orderIndex = filledOrderId;
             }else{
                 marketSellOrders.push(sellOrder);
-                emit OnPlaceSellOrder(marketId, sellOrder.trader, marketSellOrders.length-1,
-                    price, quantity, sellOrder.quantity, lastPrice);
+                orderIndex = marketSellOrders.length-1;
             }
-        }else{
-            emit OnPlaceSellOrder(marketId, sellOrder.trader, 0,
-                price, quantity, sellOrder.quantity, lastPrice);
         }
+        emit OnPlaceSellOrder(marketId, sellOrder.trader, orderIndex,
+            price, quantity, sellOrder.quantity, lastPrice, referrer);
     }
 
     function matchSellOrder(uint256 marketId, Market storage market, Order memory sellOrder, uint256[] calldata buyOrderIDs,
@@ -175,7 +174,7 @@ abstract contract SellOrders is Storage, Points{
         Order storage order = sellOrders[marketId][orderIndex];
         address trader = order.trader;
         if (msg.sender != trader) {
-            revert Helper.Unauthorized('SO165', msg.sender);
+            revert Helper.Unauthorized('SO165', msg.sender, trader);
         }
         uint256 quantity = order.quantity;
         if (quantity == 0) {

@@ -8,8 +8,8 @@ import "./Helper.sol";
 
 abstract contract Balances is Storage{
 
-    // event Deposit(address indexed sender, address indexed token, uint256 amount);
-    // event Withdrawal(address indexed recipient, address indexed token, uint256 amount);
+    event Deposit(address indexed sender, address indexed token, uint256 amount);
+    event Withdrawal(address indexed recipient, address indexed token, uint256 amount);
 
     // Ether
     function depositEth() external payable nonReentrant {
@@ -17,7 +17,7 @@ abstract contract Balances is Storage{
             revert Helper.InvalidValue('BL16', msg.value);
         }
         balances[msg.sender][address(0)] += msg.value;
-        // emit Deposit(msg.sender, address(0), msg.value);
+        emit Deposit(msg.sender, address(0), msg.value);
     }
 
     function withdrawEth(uint256 amount) external nonReentrant {
@@ -38,7 +38,7 @@ abstract contract Balances is Storage{
                 amount: amount
             });
         }
-        // emit Withdrawal(msg.sender, address(0), amount);
+        emit Withdrawal(msg.sender, address(0), amount);
     }
 
     function getEthBalance() external view returns (uint256){
@@ -58,6 +58,7 @@ abstract contract Balances is Storage{
             });
         }
         balances[msg.sender][tokenAddress] += amount;
+        emit Deposit(msg.sender, tokenAddress, amount);
     }
 
     function withdrawToken(address tokenAddress, uint256 amount) external nonReentrant {
@@ -79,6 +80,7 @@ abstract contract Balances is Storage{
                 amount: amount
             });
         }
+        emit Withdrawal(msg.sender, tokenAddress, amount);
     }
 
     function getTokenBalance(address tokenAddress) external view returns (uint256){

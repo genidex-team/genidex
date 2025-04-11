@@ -61,7 +61,7 @@ library Helper{
 
     error InsufficientBalance(string code, uint256 available, uint256 required);
     error TotalTooSmall(string code, uint256 total, uint256 minimumRequired);
-    error Unauthorized(string code, address caller);
+    error Unauthorized(string code, address caller, address owner);
     error InvalidValue(string code, uint256 providedValue);
     error OrderAlreadyCanceled(string code, uint orderIndex);
     error TransferFailed(string code, address from, address to, uint amount);

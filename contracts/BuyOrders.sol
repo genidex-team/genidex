@@ -22,7 +22,8 @@ abstract contract BuyOrders is Storage, Points{
         uint256 price,
         uint256 quantity,
         uint256 remainingQuantity,
-        uint256 lastPrice
+        uint256 lastPrice,
+        address referrer
     );
 
     // event OnMatchBuyOrder(
@@ -116,7 +117,7 @@ abstract contract BuyOrders is Storage, Points{
             }
         }
         emit OnPlaceBuyOrder(marketId, buyOrder.trader, orderIndex,
-            price, quantity, buyOrder.quantity, lv.lastPrice);
+            price, quantity, buyOrder.quantity, lv.lastPrice, referrer);
 
     }
 
@@ -196,7 +197,7 @@ abstract contract BuyOrders is Storage, Points{
         Order storage order = buyOrders[marketId][orderIndex];
         address trader = order.trader;
         if (msg.sender != trader) {
-            revert Helper.Unauthorized('BO186', msg.sender);
+            revert Helper.Unauthorized('BO186', msg.sender, trader);
         }
         uint256 quantity = order.quantity;
         if (quantity == 0) {
