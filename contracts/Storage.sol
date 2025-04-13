@@ -90,4 +90,9 @@ abstract contract Storage is Initializable, ReentrancyGuardTransientUpgradeable 
         userReferrer[msg.sender] = _referrer;
         refereesOf[_referrer].push(msg.sender);
     }
+
+    function getReferees(address referrer) external view returns (address[] memory) {
+        return refereesOf[referrer];
+    }
+
 }
