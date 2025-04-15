@@ -60,7 +60,7 @@ class GeniDexHelper{
     }
 
     async upgrade(){
-        const proxyAddress = data.get('geniDexAddress');
+        const proxyAddress = dataV2.getGeniDexAddress(network.name);//data.get('geniDexAddress');
         console.log(proxyAddress);
         const GeniDex = await ethers.getContractFactory('GeniDex');
         console.log('Upgrading GeniDex...');

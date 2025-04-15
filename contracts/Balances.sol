@@ -12,7 +12,8 @@ abstract contract Balances is Storage{
     event Withdrawal(address indexed recipient, address indexed token, uint256 amount);
 
     // Ether
-    function depositEth() external payable nonReentrant {
+    function depositEth()
+    external payable nonReentrant whenNotPaused {
         if(msg.value <= 0){
             revert Helper.InvalidValue('BL16', msg.value);
         }
@@ -20,7 +21,10 @@ abstract contract Balances is Storage{
         emit Deposit(msg.sender, address(0), msg.value);
     }
 
-    function withdrawEth(uint256 amount) external nonReentrant {
+    function withdrawEth(
+        uint256 amount
+    ) external nonReentrant whenNotPaused
+    {
         if(amount <= 0){
             revert Helper.InvalidValue('BL21', amount);
         }
@@ -41,12 +45,12 @@ abstract contract Balances is Storage{
         emit Withdrawal(msg.sender, address(0), amount);
     }
 
-    function getEthBalance() external view returns (uint256){
-        return balances[msg.sender][address(0)];
-    }
-
     // Token
-    function depositToken(address tokenAddress, uint256 amount) external nonReentrant {
+    function depositToken(
+        address tokenAddress,
+        uint256 amount
+    ) external nonReentrant whenNotPaused
+    {
         IERC20 token = IERC20(tokenAddress);
         if(token.transferFrom(msg.sender, address(this), amount) != true) {
             revert Helper.TokenTransferFailed({
@@ -61,7 +65,11 @@ abstract contract Balances is Storage{
         emit Deposit(msg.sender, tokenAddress, amount);
     }
 
-    function withdrawToken(address tokenAddress, uint256 amount) external nonReentrant {
+    function withdrawToken(
+        address tokenAddress,
+        uint256 amount
+    ) external nonReentrant whenNotPaused
+    {
         if(amount <= 0){
             revert Helper.InvalidValue('BL52', amount);
         }
@@ -85,6 +93,10 @@ abstract contract Balances is Storage{
 
     function getTokenBalance(address tokenAddress) external view returns (uint256){
         return balances[msg.sender][tokenAddress];
+    }
+
+    function getEthBalance() external view returns (uint256){
+        return balances[msg.sender][address(0)];
     }
 
 }

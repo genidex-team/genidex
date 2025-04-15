@@ -48,9 +48,14 @@ abstract contract BuyOrders is Storage, Points{
         uint256 lastPrice;
     }
 
-    function placeBuyOrder(uint256 marketId, uint256 price, uint256 quantity,
-        uint256 filledOrderId, uint256[] calldata sellOrderIDs,
-        address referrer) external nonReentrant
+    function placeBuyOrder(
+        uint256 marketId,
+        uint256 price,
+        uint256 quantity,
+        uint256 filledOrderId,
+        uint256[] calldata sellOrderIDs,
+        address referrer
+    ) external nonReentrant whenNotPaused
     {
         Market storage market = markets[marketId];
         //lv: local variable
@@ -121,9 +126,13 @@ abstract contract BuyOrders is Storage, Points{
 
     }
 
-    function matchBuyOrder(uint256 marketId, Market storage market, Order memory buyOrder,
-        uint256[] calldata sellOrderIDs, PlaceBuyOrderVariable memory lv) private
-        returns(uint256 totalTradeValue, uint256 lastPrice)
+    function matchBuyOrder(
+        uint256 marketId,
+        Market storage market,
+        Order memory buyOrder,
+        uint256[] calldata sellOrderIDs,
+        PlaceBuyOrderVariable memory lv
+    ) private returns(uint256 totalTradeValue, uint256 lastPrice)
     {
         //matchBuyOrder
         totalTradeValue = 0;
@@ -184,7 +193,11 @@ abstract contract BuyOrders is Storage, Points{
         return buyOrders[marketId];
     }
 
-    function cancelBuyOrder(uint256 marketId, uint256 orderIndex) external nonReentrant{
+    function cancelBuyOrder(
+        uint256 marketId,
+        uint256 orderIndex
+    ) external nonReentrant whenNotPaused
+    {
         //InvalidValue
         // Order[] storage marketOrders = buyOrders[marketId];
         address quoteAddress = markets[marketId].quoteAddress;

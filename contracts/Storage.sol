@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardTransientUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
 import {Helper} from "./Helper.sol";
 
-abstract contract Storage is Initializable, ReentrancyGuardTransientUpgradeable {
+abstract contract Storage is Initializable, OwnableUpgradeable, ReentrancyGuardTransientUpgradeable, PausableUpgradeable {
     struct Market {
         uint256 id;
         string symbol;
@@ -93,6 +96,14 @@ abstract contract Storage is Initializable, ReentrancyGuardTransientUpgradeable 
 
     function getReferees(address referrer) external view returns (address[] memory) {
         return refereesOf[referrer];
+    }
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
     }
 
 }

@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "./Storage.sol";
 
-abstract contract Markets is Storage, OwnableUpgradeable{
+abstract contract Markets is Storage{
 
     function addMarket(address baseAddress, address quoteAddress) external {
 
@@ -78,7 +77,7 @@ abstract contract Markets is Storage, OwnableUpgradeable{
         return hash;
     }
 
-    function getAllMarkets() external view returns(Market[] memory){
+    function getAllMarkets() external view returns(Market[] memory) {
         Market[] memory outputMarkets = new Market[](marketCounter);
         for(uint256 i=1; i<=marketCounter; i++){
             outputMarkets[i-1] = markets[i];
@@ -86,7 +85,7 @@ abstract contract Markets is Storage, OwnableUpgradeable{
         return outputMarkets;
     }
 
-    function updateMarketIsRewardable(uint256 marketId, bool isRewardable) public onlyOwner(){
+    function updateMarketIsRewardable(uint256 marketId, bool isRewardable) public onlyOwner() {
         markets[marketId].isRewardable = isRewardable;
     }
 

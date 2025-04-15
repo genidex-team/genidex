@@ -2,9 +2,8 @@
 pragma solidity ^0.8.24;
 
 import "./Storage.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract Points is Storage, OwnableUpgradeable {
+abstract contract Points is Storage {
 
     modifier onlyRewarder() {
         require(msg.sender == geniRewarder, "Only RewardDistributor can call");
@@ -15,8 +14,11 @@ abstract contract Points is Storage, OwnableUpgradeable {
         geniRewarder = _rewarder;
     }
 
-    function updatePoints(address quoteAddress, address traderAddress,
-        uint256 totalTradeValue) internal {
+    function updatePoints(
+        address quoteAddress,
+        address traderAddress,
+        uint256 totalTradeValue
+    ) internal {
         // Token storage baseTotken = tokens[lv.baseAddress];
         Token storage quoteTotken = tokens[quoteAddress];
         uint256 points = 0;
