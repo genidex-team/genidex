@@ -2,17 +2,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-
-import "./Storage.sol";
+import "./GeniDexBase.sol";
+import "./AppStorage.sol";
 import "./Points.sol";
 import "./Helper.sol";
 
+abstract contract SellOrders is GeniDexBase, Points{
 
-abstract contract SellOrders is Storage, Points{
-    
     using Math for uint256;
 
     event OnPlaceSellOrder(
@@ -47,7 +43,8 @@ abstract contract SellOrders is Storage, Points{
         address referrer
     ) external nonReentrant whenNotPaused
     {
-        Market storage market = markets[marketId];
+        GeniStorage storage s = AppStorage.getStorage();
+        Market storage market = s.markets[marketId];
         //lv: local variable
         PlaceSellOrderVariable memory lv = PlaceSellOrderVariable({
             baseAddress: market.baseAddress,
@@ -57,12 +54,12 @@ abstract contract SellOrders is Storage, Points{
         });
 
         //set referrer
-        if (userReferrer[msg.sender] == address(0)
+        if (s.userReferrer[msg.sender] == address(0)
             && referrer != address(0)
             && referrer != msg.sender)
         {
-            userReferrer[msg.sender] = referrer;
-            refereesOf[referrer].push(msg.sender);
+            s.userReferrer[msg.sender] = referrer;
+            s.refereesOf[referrer].push(msg.sender);
         }
 
         lv.total = price * quantity / lv.marketDecimalsPower;
@@ -76,7 +73,7 @@ abstract contract SellOrders is Storage, Points{
             quantity: quantity
         });
 
-        mapping(address => uint256) storage sellerBalances = balances[sellOrder.trader];
+        mapping(address => uint256) storage sellerBalances = s.balances[sellOrder.trader];
         if(sellerBalances[lv.baseAddress] < quantity){
             revert Helper.InsufficientBalance({
                 code: 'SO58',
@@ -85,7 +82,7 @@ abstract contract SellOrders is Storage, Points{
             });
         }
 
-        Order[] storage marketSellOrders = sellOrders[marketId];
+        Order[] storage marketSellOrders = s.sellOrders[marketId];
         // Order[] storage marketBuyOrders = buyOrders[marketId];
 
         uint256 lastPrice = matchSellOrder(marketId, market, sellOrder, buyOrderIDs, lv);
@@ -114,12 +111,12 @@ abstract contract SellOrders is Storage, Points{
         PlaceSellOrderVariable memory lv
     ) private returns(uint256 lastPrice)
     {
-
+        GeniStorage storage s = AppStorage.getStorage();
         lastPrice = 0;
         uint256 length = buyOrderIDs.length;
         if(length==0) return lastPrice;
 
-        Order[] storage marketBuyOrders = buyOrders[marketId];
+        Order[] storage marketBuyOrders = s.buyOrders[marketId];
         // uint256 totalTradeQuantity;
         uint256 totalTradeValue = 0;
 
@@ -142,7 +139,7 @@ abstract contract SellOrders is Storage, Points{
                 // totalTradeQuantity += tradeQuantity;
                 totalTradeValue += tradeValue;
 
-                balances[buyOrder.trader][lv.baseAddress] += tradeQuantity;
+                s.balances[buyOrder.trader][lv.baseAddress] += tradeQuantity;
                 lastPrice = buyOrderPrice;
             }
             unchecked{
@@ -150,9 +147,9 @@ abstract contract SellOrders is Storage, Points{
             }
         }
         if(totalTradeValue>0){
-            uint256 totalFee = fee(totalTradeValue);
-            balances[sellOrder.trader][lv.quoteAddress] += (totalTradeValue - totalFee);
-            balances[feeReceiver][lv.quoteAddress] += 2*totalFee;
+            uint256 totalFee = Helper.fee(totalTradeValue);
+            s.balances[sellOrder.trader][lv.quoteAddress] += (totalTradeValue - totalFee);
+            s.balances[s.feeReceiver][lv.quoteAddress] += 2*totalFee;
 
             //update geniPoints
             if(market.isRewardable == true){
@@ -169,7 +166,8 @@ abstract contract SellOrders is Storage, Points{
     }
 
     function getSellOrders(uint256 marketId) public view returns (Order[] memory) {
-        return sellOrders[marketId];
+        GeniStorage storage s = AppStorage.getStorage();
+        return s.sellOrders[marketId];
     }
 
     function cancelSellOrder(
@@ -177,15 +175,15 @@ abstract contract SellOrders is Storage, Points{
         uint256 orderIndex
     ) external nonReentrant whenNotPaused
     {
-
+        GeniStorage storage s = AppStorage.getStorage();
         // Order[] storage marketOrders = sellOrders[marketId];
-        address baseAddress = markets[marketId].baseAddress;
+        address baseAddress = s.markets[marketId].baseAddress;
 
         // if(orderIndex >= marketOrders.length){
         //     revert Helper.InvalidValue({code: 'SO159', providedValue: orderIndex});
         // }
 
-        Order storage order = sellOrders[marketId][orderIndex];
+        Order storage order = s.sellOrders[marketId][orderIndex];
         address trader = order.trader;
         if (msg.sender != trader) {
             revert Helper.Unauthorized('SO165', msg.sender, trader);
@@ -195,7 +193,7 @@ abstract contract SellOrders is Storage, Points{
             revert Helper.OrderAlreadyCanceled('SO169', orderIndex);
         }
         order.quantity = 0;
-        balances[trader][baseAddress] += quantity;
+        s.balances[trader][baseAddress] += quantity;
     }
 
 }

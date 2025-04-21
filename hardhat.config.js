@@ -23,12 +23,7 @@ module.exports = {
           viaIR: true,
           optimizer: {
             enabled: true,
-            runs: 200000,
-            details: {
-              yulDetails: {
-                optimizerSteps: "u",
-              },
-            },
+            runs: 20000,
           },
         },
       }
@@ -59,6 +54,7 @@ module.exports = {
       allowUnlimitedContractSize: true
     },
     geni: {
+      allowUnlimitedContractSize: true,
       chainId: 31339,
       url: "https://rpc.genidex.net",
       accounts: [

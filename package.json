@@ -20,6 +20,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^5.1.0",
     "@openzeppelin/contracts-upgradeable": "^5.1.0",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "geni_data": "file:../geni_data"
   }
 }

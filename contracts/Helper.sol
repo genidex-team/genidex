@@ -57,6 +57,11 @@ library Helper{
         }
     }
 
+    function fee(uint256 amount) internal pure returns (uint256 result) {
+        // 0.1% = 0.001 = 1/1000
+        result = amount / 1000;
+    }
+
     error InsufficientBalance(string code, uint256 available, uint256 required);
     error TotalTooSmall(string code, uint256 total, uint256 minimumRequired);
     error Unauthorized(string code, address caller, address owner);
@@ -64,5 +69,7 @@ library Helper{
     error OrderAlreadyCanceled(string code, uint orderIndex);
     error TransferFailed(string code, address from, address to, uint amount);
     error TokenTransferFailed(string code, address tokenAddress, address from, address to, uint amount);
+    error ReferralRootNotSet(string code);
+    error InvalidProof(string code);
 
 }

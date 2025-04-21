@@ -5,7 +5,7 @@ const fs = require('fs')
 const fn = require('./functions');
 const data = require('./data');
 
-const dataV2 = require('../../geni_data/index');
+const dataV2 = require('geni_data');
 
 class GeniDexError extends Error {
     constructor(message, data) {
@@ -60,11 +60,11 @@ class GeniDexHelper{
     }
 
     async upgrade(){
-        const proxyAddress = dataV2.getGeniDexAddress(network.name);//data.get('geniDexAddress');
-        console.log(proxyAddress);
+        const geniDexAddress = dataV2.getGeniDexAddress(network.name);//data.get('geniDexAddress');
+        console.log('geniDexAddress', geniDexAddress);
         const GeniDex = await ethers.getContractFactory('GeniDex');
         console.log('Upgrading GeniDex...');
-        const geniDexContract = await upgrades.upgradeProxy(proxyAddress, GeniDex, {kind: 'uups'});
+        const geniDexContract = await upgrades.upgradeProxy(geniDexAddress, GeniDex, {kind: 'uups'});
         dataV2.setGeniDexAddress(network.name, geniDexContract.target);
         console.log('GeniDex upgraded. Proxy address:', geniDexContract.target);
         // console.log(geniDex.deployTransaction);

@@ -2,16 +2,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-
-import "./Storage.sol";
+import "./GeniDexBase.sol";
+import "./AppStorage.sol";
 import "./Points.sol";
 import "./Helper.sol";
 
-abstract contract BuyOrders is Storage, Points{
+abstract contract BuyOrders is GeniDexBase, Points {
     // using Math for uint256;
     // using Helper for uint256;
 
@@ -57,7 +53,8 @@ abstract contract BuyOrders is Storage, Points{
         address referrer
     ) external nonReentrant whenNotPaused
     {
-        Market storage market = markets[marketId];
+        GeniStorage storage s = AppStorage.getStorage();
+        Market storage market = s.markets[marketId];
         //lv: local variable
         PlaceBuyOrderVariable memory lv = PlaceBuyOrderVariable({
             baseAddress: market.baseAddress,
@@ -76,12 +73,12 @@ abstract contract BuyOrders is Storage, Points{
         });
 
         //set referrer
-        if (userReferrer[msg.sender] == address(0)
+        if (s.userReferrer[msg.sender] == address(0)
             && referrer != address(0)
             && referrer != msg.sender)
         {
-            userReferrer[msg.sender] = referrer;
-            refereesOf[referrer].push(msg.sender);
+            s.userReferrer[msg.sender] = referrer;
+            s.refereesOf[referrer].push(msg.sender);
         }
 
         lv.total = price * quantity / lv.marketDecimalsPower;
@@ -89,7 +86,7 @@ abstract contract BuyOrders is Storage, Points{
             revert Helper.TotalTooSmall('BO68', lv.total, 1);
         }
 
-        mapping(address => uint256) storage buyerBalances = balances[buyOrder.trader];
+        mapping(address => uint256) storage buyerBalances = s.balances[buyOrder.trader];
         if(buyerBalances[lv.quoteAddress] < lv.total){
             revert Helper.InsufficientBalance({
                 code: 'BO73',
@@ -103,13 +100,13 @@ abstract contract BuyOrders is Storage, Points{
         lv.totalValue = lv.totalTradeValue + remainingValue;
 
         //debit the buyOrder's balance
-        buyerBalances[lv.quoteAddress] -= lv.totalValue + fee(lv.totalValue);
+        buyerBalances[lv.quoteAddress] -= lv.totalValue + Helper.fee(lv.totalValue);
 
         //credit the feeReceiver's balance
-        balances[feeReceiver][lv.quoteAddress] += 2 * fee(lv.totalTradeValue); // seller fee + buyer fee = 2*fee(lv.totalTradeValue)
+        s.balances[s.feeReceiver][lv.quoteAddress] += 2 * Helper.fee(lv.totalTradeValue); // seller fee + buyer fee = 2*fee(lv.totalTradeValue)
 
         //  Order[] storage marketSellOrders = sellOrders[marketId];
-        Order[] storage marketBuyOrders = buyOrders[marketId];
+        Order[] storage marketBuyOrders = s.buyOrders[marketId];
 
         uint256 orderIndex = 0;
         if(remainingValue>0){
@@ -134,13 +131,14 @@ abstract contract BuyOrders is Storage, Points{
         PlaceBuyOrderVariable memory lv
     ) private returns(uint256 totalTradeValue, uint256 lastPrice)
     {
+        GeniStorage storage s = AppStorage.getStorage();
         //matchBuyOrder
         totalTradeValue = 0;
         lastPrice = 0;
         uint256 length = sellOrderIDs.length;
         if(length==0) return (totalTradeValue, lastPrice);
 
-        Order[] storage marketSellOrders = sellOrders[marketId];
+        Order[] storage marketSellOrders = s.sellOrders[marketId];
         uint256 totalTradeQuantity = 0;
         for(uint256 i=0; i<length;){
             if(buyOrder.quantity<=0){
@@ -164,7 +162,7 @@ abstract contract BuyOrders is Storage, Points{
                 totalTradeValue += tradeValue;
 
                 // credit (quote token) the seller's balance
-                balances[sellOrder.trader][lv.quoteAddress] += tradeValue - fee(tradeValue);
+                s.balances[sellOrder.trader][lv.quoteAddress] += tradeValue - Helper.fee(tradeValue);
                 lastPrice = sellOrderPrice;
             }
             unchecked{
@@ -173,7 +171,7 @@ abstract contract BuyOrders is Storage, Points{
         }
         if(totalTradeValue>0){
             // credit (base token) the buyer's balance
-            balances[buyOrder.trader][lv.baseAddress] += totalTradeQuantity;
+            s.balances[buyOrder.trader][lv.baseAddress] += totalTradeQuantity;
 
             //update geniPoints
             if(market.isRewardable == true){
@@ -190,7 +188,8 @@ abstract contract BuyOrders is Storage, Points{
     }
 
     function getBuyOrders(uint256 marketId) public view returns (Order[] memory) {
-        return buyOrders[marketId];
+        GeniStorage storage s = AppStorage.getStorage();
+        return s.buyOrders[marketId];
     }
 
     function cancelBuyOrder(
@@ -198,16 +197,17 @@ abstract contract BuyOrders is Storage, Points{
         uint256 orderIndex
     ) external nonReentrant whenNotPaused
     {
+        GeniStorage storage s = AppStorage.getStorage();
         //InvalidValue
         // Order[] storage marketOrders = buyOrders[marketId];
-        address quoteAddress = markets[marketId].quoteAddress;
-        uint256 marketDecimalsPower = markets[marketId].marketDecimalsPower;
+        address quoteAddress = s.markets[marketId].quoteAddress;
+        uint256 marketDecimalsPower = s.markets[marketId].marketDecimalsPower;
 
         // if(orderIndex >= marketOrders.length){
         //     revert Helper.InvalidValue({code: 'BO189', providedValue: orderIndex});
         // }
 
-        Order storage order = buyOrders[marketId][orderIndex];
+        Order storage order = s.buyOrders[marketId][orderIndex];
         address trader = order.trader;
         if (msg.sender != trader) {
             revert Helper.Unauthorized('BO186', msg.sender, trader);
@@ -218,7 +218,7 @@ abstract contract BuyOrders is Storage, Points{
         }
         uint256 total = quantity * order.price / marketDecimalsPower;
         order.quantity = 0;
-        balances[trader][quoteAddress] += total + fee(total);
+        s.balances[trader][quoteAddress] += total + Helper.fee(total);
     }
 
 }

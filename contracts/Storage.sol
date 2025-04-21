@@ -43,20 +43,14 @@ abstract contract Storage is Initializable, OwnableUpgradeable, ReentrancyGuardT
         address trader;
         uint256 price;
         uint256 quantity;
-        // uint256 orderIndex;
-        // bool isActive;
     }
 
     // mapping(marketID => Order)
     mapping(uint256 => Order[]) public buyOrders;
     mapping(uint256 => Order[]) public sellOrders;
 
-    // mapping(address => uint256) public ethBalances;
     // balances[userAddress][tokenAddress]
     mapping(address => mapping(address => uint256)) balances;
-
-    // mapping(address => bool) public usdTokens;
-    // mapping(address => uint256) public tokenPriceInUSD;
 
     struct Token {
         bool isUSD;
@@ -68,8 +62,10 @@ abstract contract Storage is Initializable, OwnableUpgradeable, ReentrancyGuardT
 
     mapping(address => uint256) public userPoints;
     uint256 public totalUnclaimedPoints;
+
     mapping(address => address) public userReferrer; // referral => referrer
     mapping(address => address[]) public refereesOf; // referrer => [referees]
+    bytes32 public referralRoot;
 
     address public constant feeReceiver = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
 
@@ -81,21 +77,8 @@ abstract contract Storage is Initializable, OwnableUpgradeable, ReentrancyGuardT
     }
 
     function fee(uint256 amount) internal pure returns (uint256 result) {
-        // result = amount*percentageFee/feeDecimalsPower;
         // 0.1% = 0.001 = 1/1000
         result = amount / 1000;
-    }
-
-    function setReferrer(address _referrer) external {
-        require(userReferrer[msg.sender] == address(0), "Referrer already set");
-        require(_referrer != address(0), "Invalid referrer address");
-        require(_referrer != msg.sender, "Cannot refer yourself");
-        userReferrer[msg.sender] = _referrer;
-        refereesOf[_referrer].push(msg.sender);
-    }
-
-    function getReferees(address referrer) external view returns (address[] memory) {
-        return refereesOf[referrer];
     }
 
     function pause() external onlyOwner {

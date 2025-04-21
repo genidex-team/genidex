@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import "./Storage.sol";
+import "./GeniDexBase.sol";
+import "./AppStorage.sol";
 
-abstract contract Markets is Storage{
 
+abstract contract Markets is GeniDexBase {
+    // using AppStorage for *;
+    
     function addMarket(address baseAddress, address quoteAddress) external {
-
+        GeniStorage storage s = AppStorage.getStorage();
         uint8 baseDecimals;
         uint8 quoteDecimals;
         string memory baseSymbol;
@@ -45,10 +49,10 @@ abstract contract Markets is Storage{
         marketDecimalsPower = 10**marketDecimals;
         totalDecimals = quoteDecimals;
         bytes32 hash = generateMarketHash(baseAddress, quoteAddress);
-        require(marketIDs[hash]==0, 'Market already exists.');
-        marketCounter++;
-        markets[marketCounter] = Market({
-            id: marketCounter,
+        require(s.marketIDs[hash]==0, 'Market already exists.');
+        s.marketCounter++;
+        s.markets[s.marketCounter] = Market({
+            id: s.marketCounter,
             symbol: string(abi.encodePacked(baseSymbol, '_', quoteSymbol)),
             baseAddress: baseAddress,
             quoteAddress: quoteAddress,
@@ -60,16 +64,18 @@ abstract contract Markets is Storage{
             totalDecimals: totalDecimals,
             isRewardable: false
         });
-        marketIDs[hash] = marketCounter;
+        s.marketIDs[hash] = s.marketCounter;
     }
 
     function getMarketID(address baseAddress, address quoteAddress) external view returns(uint256){
+        GeniStorage storage s = AppStorage.getStorage();
         bytes32 hash = generateMarketHash(baseAddress, quoteAddress);
-        return marketIDs[hash];
+        return s.marketIDs[hash];
     }
 
     function getMarket(uint256 id) external view returns(Market memory) {
-        return markets[id];
+        GeniStorage storage s = AppStorage.getStorage();
+        return s.markets[id];
     }
 
     function generateMarketHash(address baseAddress, address quoteAddress) public pure returns (bytes32) {
@@ -78,15 +84,17 @@ abstract contract Markets is Storage{
     }
 
     function getAllMarkets() external view returns(Market[] memory) {
-        Market[] memory outputMarkets = new Market[](marketCounter);
-        for(uint256 i=1; i<=marketCounter; i++){
-            outputMarkets[i-1] = markets[i];
+        GeniStorage storage s = AppStorage.getStorage();
+        Market[] memory outputMarkets = new Market[](s.marketCounter);
+        for(uint256 i=1; i<=s.marketCounter; i++){
+            outputMarkets[i-1] = s.markets[i];
         }
         return outputMarkets;
     }
 
     function updateMarketIsRewardable(uint256 marketId, bool isRewardable) public onlyOwner() {
-        markets[marketId].isRewardable = isRewardable;
+        GeniStorage storage s = AppStorage.getStorage();
+        s.markets[marketId].isRewardable = isRewardable;
     }
 
 }
