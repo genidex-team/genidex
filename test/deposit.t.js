@@ -22,9 +22,17 @@ var baseDecimal;
 var quote1Balance, quote2Balance, base1Balance, base2Balance;
 var price, quantity, total;
 var baseAddress, quoteAddress;
+var wallet1, wallet2;
+var amountETH = '0.0001';
+var amountToken = '0.01';
 
 async function main() {
     
+    if(network.name == 'geni'){
+        amountETH = '100';
+        amountToken = '100000';
+    }
+
     before(async ()=>{
         [deployer, trader1, trader2, feeReceiver] = await ethers.getSigners();
         wallet1 = new EthWalletHelper(trader1);
@@ -53,13 +61,13 @@ async function main() {
                 // if(address != ethers.ZeroAddress) continue;
                 if(address == ethers.ZeroAddress){
                     await wallet1.init();
-                    await wallet1.deposit("0.00001");
+                    await wallet1.deposit(amountETH);
                     // expect(wallet1.onChainBalance).to.equal(await wallet1.getOnChainBalance());
                     expect(wallet1.geniDexBalance).to.equal(await wallet1.getGeniDexBalance());
                     // process.exit();
 
                     await wallet2.init();
-                    await wallet2.deposit("0.001");
+                    await wallet2.deposit(amountETH);
                     // expect(wallet2.onChainBalance).to.equal(await wallet2.getOnChainBalance());
                     expect(wallet2.geniDexBalance).to.equal(await wallet2.getGeniDexBalance());
 
@@ -67,14 +75,13 @@ async function main() {
                     // process.exit();
                     let balance1 = await gBalance1(address);
                     let balance2 = await gBalance2(address);
-                    let amount = '1';
-                    await tokenWalletHelper.deposit(address, trader1, amount);
-                    await tokenWalletHelper.deposit(address, trader2, amount);
+                    await tokenWalletHelper.deposit(address, trader1, amountToken);
+                    await tokenWalletHelper.deposit(address, trader2, amountToken);
 
-                    expect(balance1 + ethers.parseUnits(amount, token.decimals))
+                    expect(balance1 + ethers.parseUnits(amountToken, token.decimals))
                         .to.equal(await gBalance1(address));
 
-                    expect(balance2 + ethers.parseUnits(amount, token.decimals))
+                    expect(balance2 + ethers.parseUnits(amountToken, token.decimals))
                         .to.equal(await gBalance2(address));
                 }
             }
