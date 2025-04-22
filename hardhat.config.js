@@ -23,19 +23,11 @@ module.exports = {
           viaIR: true,
           optimizer: {
             enabled: true,
-            runs: 200000,
-            details: {
-              yulDetails: {
-                optimizerSteps: "u",
-              },
-            },
+            runs: 2000000,
           },
         },
       }
     ]
-  },
-  compilers: {
-    solc: {}
   },
   defaultNetwork: 'hardhat',
   data: {

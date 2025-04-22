@@ -64,5 +64,7 @@ library Helper{
     error OrderAlreadyCanceled(string code, uint orderIndex);
     error TransferFailed(string code, address from, address to, uint amount);
     error TokenTransferFailed(string code, address tokenAddress, address from, address to, uint amount);
+    error ReferralRootNotSet(string code);
+    error InvalidProof(string code);
 
 }

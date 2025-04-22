@@ -6,13 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "./Storage.sol";
+// import "./Storage.sol";
 import "./Points.sol";
-import "./Helper.sol";
 
-
-abstract contract SellOrders is Storage, Points{
-    
+abstract contract SellOrders is Points {
     using Math for uint256;
 
     event OnPlaceSellOrder(

@@ -7,11 +7,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "./Storage.sol";
+// import "./Storage.sol";
 import "./Points.sol";
-import "./Helper.sol";
 
-abstract contract BuyOrders is Storage, Points{
+abstract contract BuyOrders is Points{
     // using Math for uint256;
     // using Helper for uint256;
 
