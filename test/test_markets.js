@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 const fn = require('../helpers/functions');
 const data = require('../helpers/data');
 const geniDexHelper = require('../helpers/genidex.h');
-const tokenHelper = require('../helpers/token.h');
+const tokenHelper = require('../helpers/tokens.h');
 
 var geniDexAddress;
 var geniDexContract;
