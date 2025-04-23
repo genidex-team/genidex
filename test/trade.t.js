@@ -248,13 +248,6 @@ function subQuantity(_quantity1, _quantity2){
     return quantity1 - quantity2;
 }
 
-// function market.total(_price, _quantity){
-//     let price = ethers.parseUnits(_price.toFixed(market.priceDecimals), market.priceDecimals);
-//     let quantity = ethers.parseUnits(_quantity.toFixed(baseDecimal), baseDecimal);
-//     // console.log(price, quantity, price*quantity);
-//     return price * quantity / ethers.parseUnits('1', market.marketDecimals);
-// }
-
 function calcFee(total){
     return total / 1000n;
 }

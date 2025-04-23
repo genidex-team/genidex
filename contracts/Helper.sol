@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/utils/math/Math.sol";
-
-library Helper{
-    using Math for uint256;
+library Helper {
 
     // Helper function to find the minimum of two values
     function min(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -66,5 +63,6 @@ library Helper{
     error TokenTransferFailed(string code, address tokenAddress, address from, address to, uint amount);
     error ReferralRootNotSet(string code);
     error InvalidProof(string code);
+    error InvalidMarketId(string code, uint256 marketId, uint256 marketCounter);
 
 }

@@ -5,10 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "./Storage.sol";
 
-abstract contract Markets is Storage{
+abstract contract Markets is Storage {
 
     function addMarket(address baseAddress, address quoteAddress) external {
-
         uint8 baseDecimals;
         uint8 quoteDecimals;
         string memory baseSymbol;
@@ -29,35 +28,19 @@ abstract contract Markets is Storage{
             quoteDecimals = quoteToken.decimals();
             quoteSymbol = quoteToken.symbol();
         }
-
-        uint256 marketDecimalsPower;
-        uint8 marketDecimals;
-        uint8 priceDecimals;
-        uint8 totalDecimals;
-        if(quoteDecimals > 18 + baseDecimals){ //quoteDecimals - baseDecimals > 18
-            priceDecimals = quoteDecimals - baseDecimals;
-            marketDecimals = 0;
-        }else{
-            priceDecimals = 18;
-            marketDecimals = priceDecimals + baseDecimals - quoteDecimals;
-            //marketDecimals = 18 - (quoteDecimals - baseDecimals)
-        }
-        marketDecimalsPower = 10**marketDecimals;
-        totalDecimals = quoteDecimals;
+    
         bytes32 hash = generateMarketHash(baseAddress, quoteAddress);
         require(marketIDs[hash]==0, 'Market already exists.');
         marketCounter++;
+        
         markets[marketCounter] = Market({
-            id: marketCounter,
             symbol: string(abi.encodePacked(baseSymbol, '_', quoteSymbol)),
-            baseAddress: baseAddress,
-            quoteAddress: quoteAddress,
+            id: marketCounter,
             price: 0,
             lastUpdatePrice: 0,
-            marketDecimalsPower: marketDecimalsPower,
-            marketDecimals: marketDecimals,
-            priceDecimals: priceDecimals,
-            totalDecimals: totalDecimals,
+            baseDecimalsPower: 10**baseDecimals,
+            baseAddress: baseAddress,
+            quoteAddress: quoteAddress,
             isRewardable: false
         });
         marketIDs[hash] = marketCounter;

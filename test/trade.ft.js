@@ -70,8 +70,8 @@ async function main() {
             console.log('buyOrders', await ordersHelper.getDescFormatBuyOrders(marketId) );
             console.log('sellOrders', await ordersHelper.getAscFormatSellOrders(marketId) );
 
-            // await testPlaceSellOrder();
-            await testPlaceBuyOrder();
+            await testPlaceSellOrder();
+            // await testPlaceBuyOrder();
 
             console.log('buyOrders', await ordersHelper.getDescFormatBuyOrders(marketId) );
             console.log('sellOrders', await ordersHelper.getAscFormatSellOrders(marketId) );
@@ -105,20 +105,20 @@ async function testPlaceSellOrder(){
     let price = market.parsePrice(1);
     let quantity = market.parseQuantity(1);
     await buy(price, quantity);
-    // await buy(price, quantity);
-    // await buy(price, quantity);
-    // await buy(price, quantity);
-    // await buy(price, quantity);
-    // await buy(price, quantity);
-    // await buy(price, quantity);
-    // await buy(price, quantity);
-    // await buy(price, quantity);
-    // await buy(price, quantity);
+    await buy(price, quantity);
+    await buy(price, quantity);
+    await buy(price, quantity);
+    await buy(price, quantity);
+    await buy(price, quantity);
+    await buy(price, quantity);
+    await buy(price, quantity);
+    await buy(price, quantity);
+    await buy(price, quantity);
     // console.log('sellOrders', await ordersHelper.getAscFormatSellOrders(marketId) );
 
     // await sell(3, 1);
     // await gQuote1Balance();
-    quantity = market.parseQuantity(1);
+    quantity = market.parseQuantity(10);
     await sell(price, quantity);
 
     // match 0, old order index: 13.07 USD v

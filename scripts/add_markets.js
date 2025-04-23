@@ -6,7 +6,7 @@ const geniDexHelper = require('../helpers/genidex.h')
 
 async function main () {
 
-  const geniDexContract = await geniDexHelper.getContract();
+  const geniDexContract = await geniDexHelper.upgrade();
   let opAddress = data.get('opAddress');
   let arbAddress = data.get('arbAddress');
   let usdtAddress = data.get('usdtAddress');

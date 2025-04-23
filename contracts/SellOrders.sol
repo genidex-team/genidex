@@ -2,15 +2,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-
 // import "./Storage.sol";
 import "./Points.sol";
 
 abstract contract SellOrders is Points {
-    using Math for uint256;
 
     event OnPlaceSellOrder(
         uint256 indexed marketId,
@@ -22,18 +17,23 @@ abstract contract SellOrders is Points {
         uint256 lastPrice,
         address referrer
     );
-    /*struct InputPlaceSellOrder {
+
+    struct PlaceSellOrderVariable{
+        address baseAddress;
+        address quoteAddress;
+        uint256 baseDecimalsPower;
+        uint256 lastPrice;
+        uint256 total;
+    }
+
+    /*struct placeSellOrderParams {
         uint256 marketId;
         uint256 price;
         uint256 quantity;
         uint256 filledOrderId;
+        uint256[] buyOrderIDs;
+        address referrer;
     }*/
-    struct PlaceSellOrderVariable{
-        address baseAddress;
-        address quoteAddress;
-        uint256 marketDecimalsPower;
-        uint256 total;
-    }
 
     function placeSellOrder(
         uint256 marketId,
@@ -44,12 +44,16 @@ abstract contract SellOrders is Points {
         address referrer
     ) external nonReentrant whenNotPaused
     {
+        if (marketId > marketCounter) {
+            revert Helper.InvalidMarketId('SO43', marketId, marketCounter);
+        }
         Market storage market = markets[marketId];
         //lv: local variable
         PlaceSellOrderVariable memory lv = PlaceSellOrderVariable({
             baseAddress: market.baseAddress,
             quoteAddress: market.quoteAddress,
-            marketDecimalsPower: market.marketDecimalsPower,
+            baseDecimalsPower: market.baseDecimalsPower,
+            lastPrice: 0,
             total: 0
         });
 
@@ -62,7 +66,7 @@ abstract contract SellOrders is Points {
             refereesOf[referrer].push(msg.sender);
         }
 
-        lv.total = price * quantity / lv.marketDecimalsPower;
+        lv.total = price * quantity / lv.baseDecimalsPower;
         if (lv.total < 1) {
             revert Helper.TotalTooSmall('SO49', lv.total, 1);
         }
@@ -85,12 +89,12 @@ abstract contract SellOrders is Points {
         Order[] storage marketSellOrders = sellOrders[marketId];
         // Order[] storage marketBuyOrders = buyOrders[marketId];
 
-        uint256 lastPrice = matchSellOrder(marketId, market, sellOrder, buyOrderIDs, lv);
+        lv.lastPrice = matchSellOrder(marketId, market, sellOrder, buyOrderIDs, lv);
         sellerBalances[lv.baseAddress] -= quantity;
 
-        uint256 remainingValue = price * sellOrder.quantity / lv.marketDecimalsPower;
+        // lv.remainingValue = price * sellOrder.quantity / lv.baseDecimalsPower;
         uint256 orderIndex = 0;
-        if(remainingValue>0){
+        if(sellOrder.quantity>0){
             if(filledOrderId < marketSellOrders.length && marketSellOrders[filledOrderId].quantity<=0){
                 marketSellOrders[filledOrderId] = sellOrder;
                 orderIndex = filledOrderId;
@@ -100,7 +104,7 @@ abstract contract SellOrders is Points {
             }
         }
         emit OnPlaceSellOrder(marketId, sellOrder.trader, orderIndex,
-            price, quantity, sellOrder.quantity, lastPrice, referrer);
+            price, quantity, sellOrder.quantity, lv.lastPrice, referrer);
     }
 
     function matchSellOrder(
@@ -131,7 +135,7 @@ abstract contract SellOrders is Points {
             if (buyOrderPrice >= sellOrder.price && buyOrderQuantity>0) {
 
                 uint256 tradeQuantity = Helper.min(buyOrderQuantity, sellOrder.quantity);
-                uint256 tradeValue = buyOrderPrice * tradeQuantity / lv.marketDecimalsPower;
+                uint256 tradeValue = buyOrderPrice * tradeQuantity / lv.baseDecimalsPower;
 
                 buyOrder.quantity -= tradeQuantity;
                 sellOrder.quantity -= tradeQuantity;

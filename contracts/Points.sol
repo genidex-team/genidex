@@ -31,7 +31,7 @@ abstract contract Points is Storage {
             }
         }else if(quoteTotken.usdMarketID != 0){
             Market storage usdMarket = markets[quoteTotken.usdMarketID];
-            points = usdMarket.price * totalTradeValue / usdMarket.marketDecimalsPower;
+            points = usdMarket.price * totalTradeValue / usdMarket.baseDecimalsPower;
             Token storage usdTotken = tokens[usdMarket.quoteAddress];
             uint8 usdTotkenDecimals = usdTotken.decimals;
             if(6 > usdTotkenDecimals){//point decimals: 6

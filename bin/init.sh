@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ..
+
 NETWORK=$1
 
 echo "";

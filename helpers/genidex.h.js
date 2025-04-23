@@ -47,8 +47,6 @@ class GeniDexHelper{
         data.set('geniDexAddress', geniDexContract.target);
         dataV2.setGeniDexAddress(network.name, geniDexContract.target);
 
-        this.updateGenidexAddress(geniDexContract.target);
-
         await fn.printGasUsed(geniDexContract.deploymentTransaction(), 'deployProxy');
         if(network.name == 'sepolia' || network.name == 'op_sepolia'){
             await this.verify(geniDexContract.target);
@@ -115,9 +113,7 @@ class GeniDexHelper{
                 id: parseInt(item.id),
                 baseAddress: item.baseAddress,
                 quoteAddress: item.quoteAddress,
-                marketDecimalsPower: parseInt(item.marketDecimalsPower),
-                marketDecimals: parseInt(item.marketDecimals),
-                priceDecimals: parseInt(item.priceDecimals)
+                baseDecimalsPower: parseInt(item.baseDecimalsPower)
             };
         }
         return markets;
@@ -136,23 +132,6 @@ class GeniDexHelper{
 
     async fee(amount){
         return amount * this.percentageFee / this.feeDecimalsPower;
-    }
-
-    async updateGenidexAddress(_geniDexAddress){
-        const networkName = hre.network.name;
-        const geniDataFile = path.join(__dirname, '../../genidex_nodejs/data/genidex_data.json');
-        if(fs.existsSync(geniDataFile)){
-            try{
-                var data = fs.readFileSync(geniDataFile, "utf-8");
-                var jsonData = JSON.parse(data);
-                jsonData[networkName].geniDexAddress = _geniDexAddress;
-                fs.writeFileSync(geniDataFile, JSON.stringify(jsonData, null, 2));
-            }catch(error){
-                console.log(error);
-            }
-        }else{
-            console.error(geniDataFile, 'not exists')
-        }
     }
 
     throwError(error) {

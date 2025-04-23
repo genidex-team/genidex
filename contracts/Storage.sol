@@ -7,16 +7,13 @@ import "./Helper.sol";
 
 abstract contract Storage is GeniDexBase {
     struct Market {
-        uint256 id;
         string symbol;
-        address baseAddress;
-        address quoteAddress; //ERC20 token address for the quote asset (e.g., stablecoin)
+        uint256 id;
         uint256 price;
         uint256 lastUpdatePrice;
-        uint256 marketDecimalsPower;
-        uint8 marketDecimals;
-        uint8 priceDecimals;
-        uint8 totalDecimals;
+        uint256 baseDecimalsPower;
+        address baseAddress;
+        address quoteAddress; //ERC20 token address for the quote asset (e.g., stablecoin)
         bool isRewardable;
     }
 

@@ -35,13 +35,26 @@ class BuyOrdersHelper {
 
         let sellOrderIDs = await this.getSellOrderIDsMatchingBuyOrder(marketId, { price: price, quantity: quantity });
         // console.log('sellOrderIDs', sellOrderIDs);
-        let filledBuyOrderID = await this.randomFilledBuyOrderID(marketId);
+        let filledOrderId = await this.randomFilledBuyOrderID(marketId);
         // console.log('sellOrderIDs', sellOrderIDs)
-        // console.log('filledBuyOrderID', filledBuyOrderID)
+        // console.log('filledOrderId', filledOrderId)
         // console.log('placeBuyOrder', {price: price_, quantity: quantity_});
         try{
+            let orderParams = {
+                marketId,
+                price,
+                quantity,
+                filledOrderId,
+                sellOrderIDs,
+                referrer
+            }
             let transaction = await geniDexContract.connect(account)
-            .placeBuyOrder(marketId, price, quantity, filledBuyOrderID, sellOrderIDs, referrer);
+            .placeBuyOrder(marketId,
+                price,
+                quantity,
+                filledOrderId,
+                sellOrderIDs,
+                referrer);
             await fn.printGasUsed(transaction, 'placeBuyOrder');
             const receipt = await transaction.wait();
             // console.log(receipt.logs);
@@ -99,12 +112,25 @@ class BuyOrdersHelper {
 
         let buyOrderIDs = await this.getBuyOrderIDsMatchingSellOrder(marketId, { price: price, quantity: quantity });
         console.log('buyOrderIDs', buyOrderIDs);
-        let filledSellOrderID = await this.randomFilledSellOrderID(marketId);
-        // console.log('filledSellOrderID', filledSellOrderID)
-        // console.log(marketId, price, quantity, filledSellOrderID, buyOrderIDs);
+        let filledOrderId = await this.randomFilledSellOrderID(marketId);
+        // console.log('filledOrderId', filledOrderId)
+        // console.log(marketId, price, quantity, filledOrderId, buyOrderIDs);
         try{
+            let orderParams = {
+                marketId,
+                price,
+                quantity,
+                filledOrderId,
+                buyOrderIDs,
+                referrer
+            }
             let transaction = await geniDexContract.connect(account)
-            .placeSellOrder(marketId, price, quantity, filledSellOrderID, buyOrderIDs, referrer);
+            .placeSellOrder(marketId,
+                price,
+                quantity,
+                filledOrderId,
+                buyOrderIDs,
+                referrer);
             await fn.printGasUsed(transaction, 'placeSellOrder');
             const receipt = await transaction.wait();
             // console.log(receipt.logs);
@@ -330,7 +356,7 @@ class BuyOrdersHelper {
     async cancelAllSellOrder(marketId){
         // console.log('\n===cancelAllSellOrder===')
         let sellOrders = await this.getSellOrders(marketId);
-        console.log('sellOrders', sellOrders);
+        // console.log('sellOrders', sellOrders);
         for(var i in sellOrders){
             var sellOrder = sellOrders[i];
             if(sellOrder.quantity>0){

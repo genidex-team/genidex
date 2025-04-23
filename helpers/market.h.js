@@ -13,9 +13,7 @@ class Market{
         "id": 0,
         "baseAddress": "",
         "quoteAddress": "",
-        "marketDecimalsPower": "",
-        "marketDecimals": 0,
-        "priceDecimals": 0,
+        "baseDecimalsPower": "",
         "symbol": "",
         "baseDecimals": 0,
         "quoteDecimals": 0,
@@ -38,7 +36,7 @@ class Market{
     parsePrice(price){
         return ethers.parseUnits(
             price.toString(),
-            this.data.priceDecimals
+            this.data.quoteDecimals
         );
     }
 
@@ -50,7 +48,7 @@ class Market{
     }
 
     total(price, quantity){
-        return price * quantity / ethers.parseUnits('1', this.data.marketDecimals);
+        return price * quantity / ethers.parseUnits('1', this.data.baseDecimals);
     }
 
     async toPoints(amount){
