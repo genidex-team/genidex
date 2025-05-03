@@ -16,34 +16,52 @@ abstract contract Markets is Storage {
             baseDecimals = 18;
             baseSymbol = 'ETH';
         }else{
-            ERC20 baseToken = ERC20(baseAddress);
-            baseDecimals = baseToken.decimals();
-            baseSymbol = baseToken.symbol();
+            Token storage sBaseToken = tokens[baseAddress];
+            if(sBaseToken.decimals == 0){
+                ERC20 baseToken = ERC20(baseAddress);
+                baseDecimals = baseToken.decimals();
+                baseSymbol = baseToken.symbol();
+
+                sBaseToken.decimals = baseDecimals;
+                sBaseToken.symbol = baseSymbol;
+            }else{
+                baseDecimals = sBaseToken.decimals;
+                baseSymbol = sBaseToken.symbol;
+            }
         }
         if(quoteAddress == address(0)){ // ETH
             quoteDecimals = 18;
             quoteSymbol = 'ETH';
         }else{
-            ERC20 quoteToken = ERC20(quoteAddress);
-            quoteDecimals = quoteToken.decimals();
-            quoteSymbol = quoteToken.symbol();
+            Token storage sQuoteToken = tokens[quoteAddress];
+            if(sQuoteToken.decimals == 0){
+                ERC20 quoteToken = ERC20(quoteAddress);
+                quoteDecimals = quoteToken.decimals();
+                quoteSymbol = quoteToken.symbol();
+
+                sQuoteToken.decimals = quoteDecimals;
+                sQuoteToken.symbol = quoteSymbol;
+            }else{
+                quoteDecimals = sQuoteToken.decimals;
+                quoteSymbol = sQuoteToken.symbol;
+            }
         }
-    
+
         bytes32 hash = generateMarketHash(baseAddress, quoteAddress);
         require(marketIDs[hash]==0, 'Market already exists.');
         marketCounter++;
-        
+
         markets[marketCounter] = Market({
             symbol: string(abi.encodePacked(baseSymbol, '_', quoteSymbol)),
             id: marketCounter,
             price: 0,
             lastUpdatePrice: 0,
-            baseDecimalsPower: 10**baseDecimals,
             baseAddress: baseAddress,
             quoteAddress: quoteAddress,
             isRewardable: false
         });
         marketIDs[hash] = marketCounter;
+
     }
 
     function getMarketID(address baseAddress, address quoteAddress) external view returns(uint256){

@@ -113,7 +113,7 @@ class GeniDexHelper{
                 id: parseInt(item.id),
                 baseAddress: item.baseAddress,
                 quoteAddress: item.quoteAddress,
-                baseDecimalsPower: parseInt(item.baseDecimalsPower)
+                // baseDecimalsPower: parseInt(item.baseDecimalsPower)
             };
         }
         return markets;

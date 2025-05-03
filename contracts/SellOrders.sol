@@ -21,7 +21,6 @@ abstract contract SellOrders is Points {
     struct PlaceSellOrderVariable{
         address baseAddress;
         address quoteAddress;
-        uint256 baseDecimalsPower;
         uint256 lastPrice;
         uint256 total;
     }
@@ -52,7 +51,6 @@ abstract contract SellOrders is Points {
         PlaceSellOrderVariable memory lv = PlaceSellOrderVariable({
             baseAddress: market.baseAddress,
             quoteAddress: market.quoteAddress,
-            baseDecimalsPower: market.baseDecimalsPower,
             lastPrice: 0,
             total: 0
         });
@@ -66,7 +64,7 @@ abstract contract SellOrders is Points {
             refereesOf[referrer].push(msg.sender);
         }
 
-        lv.total = price * quantity / lv.baseDecimalsPower;
+        lv.total = price * quantity / WAD;
         if (lv.total < 1) {
             revert Helper.TotalTooSmall('SO49', lv.total, 1);
         }
@@ -92,7 +90,7 @@ abstract contract SellOrders is Points {
         lv.lastPrice = matchSellOrder(marketId, market, sellOrder, buyOrderIDs, lv);
         sellerBalances[lv.baseAddress] -= quantity;
 
-        // lv.remainingValue = price * sellOrder.quantity / lv.baseDecimalsPower;
+        // lv.remainingValue = price * sellOrder.quantity / WAD;
         uint256 orderIndex = 0;
         if(sellOrder.quantity>0){
             if(filledOrderId < marketSellOrders.length && marketSellOrders[filledOrderId].quantity<=0){
@@ -135,7 +133,7 @@ abstract contract SellOrders is Points {
             if (buyOrderPrice >= sellOrder.price && buyOrderQuantity>0) {
 
                 uint256 tradeQuantity = Helper.min(buyOrderQuantity, sellOrder.quantity);
-                uint256 tradeValue = buyOrderPrice * tradeQuantity / lv.baseDecimalsPower;
+                uint256 tradeValue = buyOrderPrice * tradeQuantity / WAD;
 
                 buyOrder.quantity -= tradeQuantity;
                 sellOrder.quantity -= tradeQuantity;

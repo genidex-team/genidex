@@ -23,7 +23,6 @@ abstract contract BuyOrders is Points{
     struct PlaceBuyOrderVariable {
         address baseAddress;
         address quoteAddress;
-        uint256 baseDecimalsPower;
         uint256 total;
         uint256 totalTradeValue;
         uint256 totalValue;
@@ -57,7 +56,6 @@ abstract contract BuyOrders is Points{
         PlaceBuyOrderVariable memory lv = PlaceBuyOrderVariable({
             baseAddress: market.baseAddress,
             quoteAddress: market.quoteAddress,
-            baseDecimalsPower: market.baseDecimalsPower,
             total: 0,
             totalTradeValue: 0,
             totalValue: 0,
@@ -80,7 +78,7 @@ abstract contract BuyOrders is Points{
             refereesOf[referrer].push(msg.sender);
         }
 
-        lv.total = price * quantity / lv.baseDecimalsPower;
+        lv.total = price * quantity / WAD;
         if (lv.total < 1) {
             revert Helper.TotalTooSmall('BO68', lv.total, 1);
         }
@@ -95,7 +93,7 @@ abstract contract BuyOrders is Points{
         }
 
         (lv.totalTradeValue, lv.lastPrice) = matchBuyOrder(marketId, market, buyOrder, sellOrderIDs, lv);
-        lv.remainingValue = price * buyOrder.quantity / lv.baseDecimalsPower;
+        lv.remainingValue = price * buyOrder.quantity / WAD;
         lv.totalValue = lv.totalTradeValue + lv.remainingValue;
 
         //debit the buyOrder's balance
@@ -150,7 +148,7 @@ abstract contract BuyOrders is Points{
             if (sellOrderPrice <= buyOrder.price && sellOrderQuantity>0) {
 
                 uint256 tradeQuantity = Helper.min(buyOrder.quantity, sellOrderQuantity);
-                uint256 tradeValue = sellOrderPrice * tradeQuantity / lv.baseDecimalsPower;
+                uint256 tradeValue = sellOrderPrice * tradeQuantity / WAD;
 
                 // storage
                 // sub tradeQuantity
@@ -198,7 +196,6 @@ abstract contract BuyOrders is Points{
         //InvalidValue
         // Order[] storage marketOrders = buyOrders[marketId];
         address quoteAddress = markets[marketId].quoteAddress;
-        uint256 baseDecimalsPower = markets[marketId].baseDecimalsPower;
 
         // if(orderIndex >= marketOrders.length){
         //     revert Helper.InvalidValue({code: 'BO189', providedValue: orderIndex});
@@ -213,7 +210,7 @@ abstract contract BuyOrders is Points{
         if (quantity == 0) {
             revert Helper.OrderAlreadyCanceled('BO192', orderIndex);
         }
-        uint256 total = quantity * order.price / baseDecimalsPower;
+        uint256 total = quantity * order.price / WAD;
         order.quantity = 0;
         balances[trader][quoteAddress] += total + fee(total);
     }

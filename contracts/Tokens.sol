@@ -13,15 +13,11 @@ abstract contract Tokens is Storage{
         tokens[tokenAddress].decimals = token.decimals();
     }
 
-    function updateUSDMarketID(address tokenAddress, uint256 marketID) public onlyOwner{
-        tokens[tokenAddress].usdMarketID = marketID;
-    }
-
     struct TokenInfo {
         address tokenAddress;
         bool isUSD;
         uint8 decimals;
-        uint256 usdMarketID;
+        // uint256 usdMarketID;
     }
 
     function getTokensInfo(address[] calldata tokenAddresses) external view returns (TokenInfo[] memory) {
@@ -32,8 +28,8 @@ abstract contract Tokens is Storage{
             result[i] = TokenInfo({
                 tokenAddress: tokenAddresses[i],
                 isUSD: info.isUSD,
-                decimals: info.decimals,
-                usdMarketID: info.usdMarketID
+                decimals: info.decimals//,
+                // usdMarketID: info.usdMarketID
             });
         }
         return result;

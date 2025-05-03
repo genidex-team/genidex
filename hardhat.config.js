@@ -32,6 +32,7 @@ module.exports = {
   defaultNetwork: 'hardhat',
   data: {
     gasPrice: 60n*10n**9n,// ETH - wei/gas
+    // gasPrice: 600n*10n**6n,// ETH - wei/gas
     // gasPrice: 13n*10n**9n/1000n,// Arbitrum - wei/gas
     ethPrice: 3000 //  USD/ETH
   },

@@ -48,7 +48,7 @@ async function main () {
   await geniDexContract.updateMarketIsRewardable(4, true);
   await geniDexContract.updateMarketIsRewardable(5, true);
 
-  await geniDexContract.updateUSDMarketID(ethers.ZeroAddress, 2);
+  // await geniDexContract.updateUSDMarketID(ethers.ZeroAddress, 2);
 
   markets = await geniDexHelper.getAllMarkets();
   console.log('markets', markets);
