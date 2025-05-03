@@ -52,10 +52,10 @@ async function main() {
                 await tokenWalletHelper.deposit(quoteAddress, trader1, initAmount);
                 await tokenWalletHelper.deposit(baseAddress, trader2, initAmount);
 
-                // await tokenWalletHelper.getOnChainBalance(quoteAddress, trader1);
+                // await tokenWalletHelper.getWalletBalance(quoteAddress, trader1);
                 await tokenWalletHelper.getGeniDexBalance('trader1', quoteAddress, trader1);
                 
-                // await tokenWalletHelper.getOnChainBalance(baseAddress, trader2);
+                // await tokenWalletHelper.getWalletBalance(baseAddress, trader2);
                 await tokenWalletHelper.getGeniDexBalance('trader2', baseAddress, trader2);
             // }
             

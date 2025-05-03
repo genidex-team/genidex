@@ -10,7 +10,7 @@ const EthWalletHelper = require('../helpers/eth.wallet.h');
 
 var geniDexContract;
 
-var onChainBalance, geniDexBalance;
+var walletBalance, geniDexBalance;
 var amount, ethAmount;
 
 
@@ -35,22 +35,22 @@ async function main() {
 
         it("Balances", async ()=>{
 
-            expect(wallet1.onChainBalance).to.equal(await wallet1.getOnChainBalance());
+            expect(wallet1.walletBalance).to.equal(await wallet1.getWalletBalance());
             expect(wallet1.geniDexBalance).to.equal(await wallet1.getGeniDexBalance());
 
-            // expect(wallet2.onChainBalance).to.equal(await wallet2.getOnChainBalance());
+            // expect(wallet2.walletBalance).to.equal(await wallet2.getWalletBalance());
             // expect(wallet2.geniDexBalance).to.equal(await wallet2.getGeniDexBalance());
 
             await wallet1.deposit("10");
-            expect(wallet1.onChainBalance).to.equal(await wallet1.getOnChainBalance());
+            expect(wallet1.walletBalance).to.equal(await wallet1.getWalletBalance());
             expect(wallet1.geniDexBalance).to.equal(await wallet1.getGeniDexBalance());
 
             // await wallet2.deposit("10");
-            // expect(wallet2.onChainBalance).to.equal(await wallet2.getOnChainBalance());
+            // expect(wallet2.walletBalance).to.equal(await wallet2.getWalletBalance());
             // expect(wallet2.geniDexBalance).to.equal(await wallet2.getGeniDexBalance());
 
             await wallet1.withdraw("1");
-            expect(wallet1.onChainBalance).to.equal(await wallet1.getOnChainBalance());
+            expect(wallet1.walletBalance).to.equal(await wallet1.getWalletBalance());
             expect(wallet1.geniDexBalance).to.equal(await wallet1.getGeniDexBalance());
 
         });

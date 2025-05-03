@@ -12,7 +12,7 @@ class EthWalletHelper{
 
     totalFee = 0n;
     geniDexContract;
-    onChainBalance;
+    walletBalance;
     geniDexBalance;
     account;
 
@@ -23,13 +23,13 @@ class EthWalletHelper{
     async init(){
         this.geniDexContract = await geniDexHelper.getContract();
         // [deployer, trader1, trader2] = await ethers.getSigners();
-        this.onChainBalance = await this.getOnChainBalance();
+        this.walletBalance = await this.getWalletBalance();
         this.geniDexBalance = await this.getGeniDexBalance();
     }
 
     addWeiFee(fee){
         this.totalFee += fee;
-        this.onChainBalance -= fee;
+        this.walletBalance -= fee;
     }
 
     async deposit(amount){
@@ -39,11 +39,11 @@ class EthWalletHelper{
         let weiFee = await this.getWeiFee(transaction);
         // console.log('_amount', _amount);
         // console.log('weiFee', weiFee);
-        // console.log(`onChainBalance: ${this.onChainBalance} - ${_amount} - ${weiFee} = `);
+        // console.log(`walletBalance: ${this.walletBalance} - ${_amount} - ${weiFee} = `);
         this.addWeiFee(weiFee);
-        this.onChainBalance -= _amount;
+        this.walletBalance -= _amount;
         this.geniDexBalance += _amount;
-        // console.log(`onChainBalance: ${this.onChainBalance}`);
+        // console.log(`walletBalance: ${this.walletBalance}`);
     }
 
     async getWeiFee(transaction){
@@ -68,12 +68,12 @@ class EthWalletHelper{
         fn.printGasUsed(transaction, '\nwithdraw '+amount+' ETH');
         let weiFee = await fn.getWeiFee(transaction);
         this.addWeiFee(weiFee);
-        this.onChainBalance += _amount;
+        this.walletBalance += _amount;
         this.geniDexBalance -= _amount;
     }
 
-    async checkOnChainBalance(){
-        return this.onChainBalance == await this.getOnChainBalance();
+    async checkwalletBalance(){
+        return this.walletBalance == await this.getWalletBalance();
     }
 
     async batchWithdraw(n, amount){
@@ -90,9 +90,9 @@ class EthWalletHelper{
         })
     }
 
-    async getOnChainBalance(){
+    async getWalletBalance(){
         const balance = await provider.getBalance(this.account);
-        console.log('getOnChainBalance', ethers.formatEther(balance).yellow);
+        console.log('getWalletBalance', ethers.formatEther(balance).yellow);
         return balance;
     }
 

@@ -10,6 +10,7 @@ const data = require('./data');
 const provider = ethers.provider;
 
 var geniDexAddress, geniDexContract;
+var deployer, trader1, trader2;
 
 class TokenWalletHelper{
 
@@ -48,29 +49,31 @@ class TokenWalletHelper{
         // }
         
         fn.printGasUsed(transaction, 'widthdraw '+amount + ' ' + symbol );
+        return transaction;
     }
 
-    async deposit(tokenAddress, account, amount){
+    async deposit(tokenAddress, account, strAmount){
         var decimals, symbol, balance, transaction;
         // console.log(tokenAddress);
         if(tokenAddress == ethers.ZeroAddress){
             decimals = 18;
             symbol = 'ETH';
             balance = await ethers.provider.getBalance(account.address);
-            var _amount = ethers.parseUnits(amount, decimals);
-            transaction = await geniDexContract.connect(account).depositEth({value: _amount});
+            var normAmount = ethers.parseEther(strAmount);
+            transaction = await geniDexContract.connect(account).depositEth({value: normAmount});
         }else{
             let token = new ethers.Contract(tokenAddress, erc20Abi, account);
             decimals = await token.decimals();
             symbol = await token.symbol();
-            var _amount = ethers.parseUnits(amount, decimals);
-            await token.approve(geniDexAddress, _amount);
-            transaction = await geniDexContract.connect(account).depositToken(tokenAddress, _amount);
+            var normAmount = ethers.parseEther(strAmount);
+            await token.approve(geniDexAddress, ethers.parseUnits(strAmount, decimals) );
+            transaction = await geniDexContract.connect(account).depositToken(tokenAddress, normAmount);
         }
-        fn.printGasUsed(transaction, 'deposit '+amount + ' ' + symbol );
+        fn.printGasUsed(transaction, `Deposit ${strAmount} ${symbol}` );
+        return transaction;
     }
 
-    async getOnChainBalance(message, tokenAddress, account){
+    async getWalletBalance(message, tokenAddress, account){
         var decimals, symbol, balance;
         // console.log(tokenAddress);
         if(tokenAddress == ethers.ZeroAddress){
@@ -85,26 +88,26 @@ class TokenWalletHelper{
             symbol = await token.symbol();
         }
         
-        console.log('getOnChainBalance', message, symbol, parseFloat(ethers.formatUnits(balance, decimals)));
+        console.log('getWalletBalance', message, symbol, parseFloat(ethers.formatUnits(balance, decimals)));
         return balance;
     }
 
     async getGeniDexBalance(message, tokenAddress, account, format){
-        var decimals, symbol;
+        var symbol;
         // console.log(tokenAddress);
         if(tokenAddress == ethers.ZeroAddress){
-            decimals = 18;
+            // decimals = 18;
             symbol = 'ETH';
         }else{
             let token = new ethers.Contract(tokenAddress, erc20Abi, account);
-            decimals = await token.decimals();
+            // decimals = await token.decimals();
             symbol = await token.symbol();
         }
         const balance = await geniDexContract.connect(account).getTokenBalance(tokenAddress);
         
-        console.log('getGeniDexBalance', message, symbol, parseFloat(ethers.formatUnits(balance, decimals)));
+        console.log('getGeniDexBalance', message, symbol, parseFloat(ethers.formatEther(balance)));
         if(format==true){
-            return parseFloat(ethers.formatUnits(balance, decimals));
+            return parseFloat(ethers.formatEther(balance));
         }else{
             return balance;
         }

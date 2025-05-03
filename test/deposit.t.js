@@ -62,13 +62,13 @@ async function main() {
                 if(address == ethers.ZeroAddress){
                     await wallet1.init();
                     await wallet1.deposit(amountETH);
-                    // expect(wallet1.onChainBalance).to.equal(await wallet1.getOnChainBalance());
+                    // expect(wallet1.walletBalance).to.equal(await wallet1.getWalletBalance());
                     expect(wallet1.geniDexBalance).to.equal(await wallet1.getGeniDexBalance());
                     // process.exit();
 
                     await wallet2.init();
                     await wallet2.deposit(amountETH);
-                    // expect(wallet2.onChainBalance).to.equal(await wallet2.getOnChainBalance());
+                    // expect(wallet2.walletBalance).to.equal(await wallet2.getWalletBalance());
                     expect(wallet2.geniDexBalance).to.equal(await wallet2.getGeniDexBalance());
 
                 }else{ // deposit token
