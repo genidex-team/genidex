@@ -3,9 +3,9 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-import "./Storage.sol";
+import "./GeniDexBase.sol";
 
-abstract contract Referral is Storage {
+abstract contract Referral is GeniDexBase {
     function setReferralRoot(bytes32 _referralRoot) external onlyOwner {
         referralRoot = _referralRoot;
     }

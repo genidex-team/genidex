@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-// import "./Storage.sol";
-import "./Points.sol";
+import "./GeniDexBase.sol";
 
-abstract contract SellOrders is Points {
+abstract contract SellOrders is GeniDexBase {
 
     event OnPlaceSellOrder(
         uint256 indexed marketId,
@@ -149,13 +148,13 @@ abstract contract SellOrders is Points {
             }
         }
         if(totalTradeValue>0){
-            uint256 totalFee = fee(totalTradeValue);
+            uint256 totalFee = _fee(totalTradeValue);
             balances[sellOrder.trader][lv.quoteAddress] += (totalTradeValue - totalFee);
             balances[feeReceiver][lv.quoteAddress] += 2*totalFee;
 
             //update geniPoints
             if(market.isRewardable == true){
-                updatePoints(lv.quoteAddress, sellOrder.trader, totalTradeValue);
+                _updatePoints(lv.quoteAddress, sellOrder.trader, totalTradeValue);
             }
 
             // update market.price

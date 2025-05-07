@@ -3,9 +3,9 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import "./Storage.sol";
+import "./GeniDexBase.sol";
 
-abstract contract Tokens is Storage{
+abstract contract Tokens is GeniDexBase {
 
     function updateTokenIsUSD(address tokenAddress, bool isUSD) public onlyOwner(){
         ERC20 token = ERC20(tokenAddress);
@@ -13,11 +13,16 @@ abstract contract Tokens is Storage{
         tokens[tokenAddress].decimals = token.decimals();
     }
 
+    function updateUSDMarketID(address tokenAddress, uint256 marketID) public onlyOwner{
+        tokens[tokenAddress].usdMarketID = marketID;
+    }
+
     struct TokenInfo {
         address tokenAddress;
-        bool isUSD;
+        string symbol;
+        uint256 usdMarketID;
         uint8 decimals;
-        // uint256 usdMarketID;
+        bool isUSD;
     }
 
     function getTokensInfo(address[] calldata tokenAddresses) external view returns (TokenInfo[] memory) {
@@ -27,9 +32,10 @@ abstract contract Tokens is Storage{
             Token memory info = tokens[tokenAddresses[i]];
             result[i] = TokenInfo({
                 tokenAddress: tokenAddresses[i],
-                isUSD: info.isUSD,
-                decimals: info.decimals//,
-                // usdMarketID: info.usdMarketID
+                symbol: info.symbol,
+                usdMarketID: info.usdMarketID,
+                decimals: info.decimals,
+                isUSD: info.isUSD
             });
         }
         return result;

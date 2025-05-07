@@ -5,9 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import "./Storage.sol";
+import "./GeniDexBase.sol";
 
-abstract contract Balances is Storage{
+abstract contract Balances is GeniDexBase {
     using SafeERC20 for IERC20;
     event Deposit(address indexed sender, address indexed token, uint256 amount);
     event Withdrawal(address indexed recipient, address indexed token, uint256 amount);

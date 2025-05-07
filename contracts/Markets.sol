@@ -3,9 +3,9 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import "./Storage.sol";
+import "./GeniDexBase.sol";
 
-abstract contract Markets is Storage {
+abstract contract Markets is GeniDexBase {
 
     function addMarket(address baseAddress, address quoteAddress) external {
         uint8 baseDecimals;

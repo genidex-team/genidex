@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-// import "./Storage.sol";
-import "./Points.sol";
+import "./GeniDexBase.sol";
 
-abstract contract BuyOrders is Points{
+abstract contract BuyOrders is GeniDexBase {
     // using Math for uint256;
     // using Helper for uint256;
 
@@ -97,10 +96,11 @@ abstract contract BuyOrders is Points{
         lv.totalValue = lv.totalTradeValue + lv.remainingValue;
 
         //debit the buyOrder's balance
-        buyerBalances[lv.quoteAddress] -= lv.totalValue + fee(lv.totalValue);
+        buyerBalances[lv.quoteAddress] -= lv.totalValue + _fee(lv.totalValue);
 
         //credit the feeReceiver's balance
-        balances[feeReceiver][lv.quoteAddress] += 2 * fee(lv.totalTradeValue); // seller fee + buyer fee = 2*fee(lv.totalTradeValue)
+        // seller fee + buyer fee = 2*_fee(lv.totalTradeValue)
+        balances[feeReceiver][lv.quoteAddress] += 2 * _fee(lv.totalTradeValue);
 
         //  Order[] storage marketSellOrders = sellOrders[marketId];
         Order[] storage marketBuyOrders = buyOrders[marketId];
@@ -116,7 +116,7 @@ abstract contract BuyOrders is Points{
             }
         }
 
-        emit OnPlaceBuyOrder(marketId, buyOrder.trader, filledOrderId,
+        emit OnPlaceBuyOrder(marketId, buyOrder.trader, orderIndex,
             price, quantity, buyOrder.quantity, lv.lastPrice, referrer);
 
     }
@@ -159,7 +159,7 @@ abstract contract BuyOrders is Points{
                 totalTradeValue += tradeValue;
 
                 // credit (quote token) the seller's balance
-                balances[sellOrder.trader][lv.quoteAddress] += tradeValue - fee(tradeValue);
+                balances[sellOrder.trader][lv.quoteAddress] += tradeValue - _fee(tradeValue);
                 lastPrice = sellOrderPrice;
             }
             unchecked{
@@ -172,7 +172,7 @@ abstract contract BuyOrders is Points{
 
             //update geniPoints
             if(market.isRewardable == true){
-                updatePoints(lv.quoteAddress, buyOrder.trader, totalTradeValue);
+                _updatePoints(lv.quoteAddress, buyOrder.trader, totalTradeValue);
             }
 
             // update market.price
@@ -212,7 +212,7 @@ abstract contract BuyOrders is Points{
         }
         uint256 total = quantity * order.price / WAD;
         order.quantity = 0;
-        balances[trader][quoteAddress] += total + fee(total);
+        balances[trader][quoteAddress] += total + _fee(total);
     }
 
 }
