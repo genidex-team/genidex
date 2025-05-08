@@ -153,7 +153,7 @@ abstract contract SellOrders is GeniDexBase {
             balances[feeReceiver][lv.quoteAddress] += 2*totalFee;
 
             //update geniPoints
-            if(market.isRewardable == true){
+            if(market.isRewardable){
                 _updatePoints(lv.quoteAddress, sellOrder.trader, totalTradeValue);
             }
 

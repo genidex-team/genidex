@@ -83,11 +83,11 @@ abstract contract BuyOrders is GeniDexBase {
         }
 
         mapping(address => uint256) storage buyerBalances = balances[buyOrder.trader];
-        if(buyerBalances[lv.quoteAddress] < lv.total){
+        if(buyerBalances[lv.quoteAddress] < lv.total + _fee(lv.total)){
             revert Helper.InsufficientBalance({
                 code: 'BO73',
                 available: buyerBalances[lv.quoteAddress],
-                required:lv.total
+                required: lv.total + _fee(lv.total)
             });
         }
 
@@ -171,7 +171,7 @@ abstract contract BuyOrders is GeniDexBase {
             balances[buyOrder.trader][lv.baseAddress] += totalTradeQuantity;
 
             //update geniPoints
-            if(market.isRewardable == true){
+            if(market.isRewardable){
                 _updatePoints(lv.quoteAddress, buyOrder.trader, totalTradeValue);
             }
 

@@ -43,7 +43,7 @@ abstract contract GeniDexBase is
     ) internal {
         Token storage quoteTotken = tokens[quoteAddress];
         uint256 points = 0;
-        if(quoteTotken.isUSD==true){
+        if(quoteTotken.isUSD){
             points = totalTradeValue;
         }else if(quoteTotken.usdMarketID != 0){
             Market storage usdMarket = markets[quoteTotken.usdMarketID];

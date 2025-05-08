@@ -34,8 +34,10 @@ abstract contract Balances is GeniDexBase {
         }
         balances[msg.sender][address(0)] -= amount;
 
+        emit Withdrawal(msg.sender, address(0), amount);
+
         bool success = payable(msg.sender).send(amount);
-        if( success != true){
+        if(!success){
             revert Helper.TransferFailed({
                 code: 'BL30',
                 from: address(this),
@@ -43,7 +45,6 @@ abstract contract Balances is GeniDexBase {
                 amount: amount
             });
         }
-        emit Withdrawal(msg.sender, address(0), amount);
     }
 
     // Token
@@ -94,7 +95,7 @@ abstract contract Balances is GeniDexBase {
         uint256 pre = token.balanceOf(address(this));
         token.safeTransfer(msg.sender, rawAmount);
         uint256 post = token.balanceOf(address(this));
-        require(pre - post == rawAmount, "transfer mismatch");
+        require(pre - post <= rawAmount, "transfer mismatch");
 
         emit Withdrawal(msg.sender, tokenAddress, normalizedAmount);
     }

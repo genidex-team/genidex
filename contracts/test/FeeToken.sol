@@ -3,9 +3,9 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract FeeToken is ERC20 {
-    uint256 public constant FEE_BPS = 100; // 1 % (1/10000)
-    uint8 private _decimals;
-    constructor(string memory n,string memory s,uint8 d,uint256 init) ERC20(n,s) {
+    // uint256 public constant FEE_BPS = 100; // 1 % (1/10000)
+    uint8 private immutable _decimals;
+    constructor(string memory n, string memory s, uint8 d, uint256 init) ERC20(n,s) {
         _decimals = d;
         _mint(msg.sender, init * 1e18);
     }

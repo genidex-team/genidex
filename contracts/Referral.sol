@@ -34,7 +34,7 @@ abstract contract Referral is GeniDexBase {
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(msg.sender, referees)))
         );
-        if (MerkleProof.verify(proof, referralRoot, leaf) != true) {
+        if (!MerkleProof.verify(proof, referralRoot, leaf)) {
             revert Helper.InvalidProof("RF39");
         }
         for (uint256 i = 0; i < referees.length; i++) {

@@ -5,12 +5,16 @@ import "./GeniDexBase.sol";
 
 abstract contract Points is GeniDexBase {
 
+    event GeniRewarderUpdated(address indexed previous, address indexed newRewarder);
+
     modifier onlyRewarder() {
         require(msg.sender == geniRewarder, "Only RewardDistributor can call");
         _;
     }
 
     function setGeniRewarder(address _rewarder) external onlyOwner {
+        require(_rewarder != address(0), "rewarder = 0");
+        emit GeniRewarderUpdated(geniRewarder, _rewarder);
         geniRewarder = _rewarder;
     }
 

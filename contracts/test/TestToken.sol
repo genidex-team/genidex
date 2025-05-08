@@ -6,17 +6,17 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract TestToken is ERC20 {
     // Constructor function that initializes the ERC20 token with a custom name, symbol, and initial supply
     // The name, symbol, and initial supply are passed as arguments to the constructor
-    uint8 _decimals;
+    uint8 immutable _decimals;
 
     constructor(
-        string memory name,
-        string memory symbol,
+        string memory __name,
+        string memory __symbol,
         uint256 initialSupply,
-        uint8 decimals_
-    ) ERC20(name, symbol) {
+        uint8 __decimals
+    ) ERC20(__name, __symbol) {
         // Mint the initial supply of tokens to the deployer's address
         _mint(msg.sender, initialSupply);
-        _decimals = decimals_;
+        _decimals = __decimals;
     }
 
     function decimals() public view override returns (uint8) {

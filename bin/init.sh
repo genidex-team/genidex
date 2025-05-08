@@ -18,3 +18,15 @@ npx hardhat run scripts/add_markets.js --network $NETWORK
 echo "";echo "";
 echo "================= node src/init.js ===================="
 cd ../genidex_nodejs && node src/init.js $NETWORK
+
+echo "";echo "";
+echo "================= deploy geni_token ===================="
+cd ../geni_token && ./bin/deploy.sh $NETWORK
+
+echo "";echo "";
+echo "================= init geni_rewarder ===================="
+cd ../geni_rewarder && ./bin/init.sh $NETWORK
+
+echo "";echo "";
+echo "================= set_geni_rewarder_address ===================="
+cd ../genidex_contract && npx hardhat run scripts/set_geni_rewarder_address.js --network $NETWORK
