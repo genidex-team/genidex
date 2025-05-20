@@ -15,3 +15,6 @@ artifacts
 /coverage.json
 .openzeppelin
 .deps
+lib
+artifacts_forge
+cache_forge

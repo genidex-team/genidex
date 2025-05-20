@@ -7,6 +7,7 @@ require('@nomicfoundation/hardhat-ethers');
 require('@openzeppelin/hardhat-upgrades');
 require("@nomicfoundation/hardhat-verify");
 require('hardhat-gas-reporter');
+require("@nomicfoundation/hardhat-foundry");
 
 const env = require('./helpers/env');
 env.loadDefaultEnv();
