@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-const data = require("../../geni_data/index");
+const data = require("geni_data");
 const geniDexHelper = require('../helpers/genidex.h');
 
 async function main() {
