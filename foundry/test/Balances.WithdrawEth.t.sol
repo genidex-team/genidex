@@ -3,7 +3,8 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "../contracts/GeniDex.sol";
-import "./Functions.sol";
+// import "./Functions.sol";
+import {GeniDex, GeniDexHelper} from "./GeniDexHelper.sol";
 
 /**
  * @title BalancesWithdrawEthTest (with fuzz‑testing)
@@ -17,7 +18,7 @@ import "./Functions.sol";
  *
  */
 
-contract BalancesWithdrawEthTest is Test, Functions {
+contract BalancesWithdrawEthTest is Test {
 
     GeniDex internal dex;
     address internal alice = address(0xA11CE);
@@ -26,7 +27,7 @@ contract BalancesWithdrawEthTest is Test, Functions {
     event Withdrawal(address indexed recipient, address indexed token, uint256 amount);
 
     function setUp() public {
-        dex = _deployGenidex();
+        dex = GeniDexHelper.deploy();
 
         // Seed Alice with 1000 ether for paying gas & deposits
         vm.deal(alice, 1000 ether);

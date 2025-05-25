@@ -14,7 +14,7 @@ const Market = require('../helpers/market.h');
 var geniDexContract;
 var marketId = 1;
 var market;// = marketsHelper.getMarket(marketId);
-var initAmount = '1000.0';
+var initAmount = '100000.0';
 
 async function main() {
     
@@ -102,8 +102,8 @@ async function main() {
 }
 
 async function testPlaceSellOrder(){
-    let price = market.parsePrice(1);
-    let quantity = market.parseQuantity(1);
+    let price = ethers.parseEther("1");
+    let quantity = ethers.parseEther("1000");
     await buy(price, quantity);
     await buy(price, quantity);
     await buy(price, quantity);
@@ -118,7 +118,7 @@ async function testPlaceSellOrder(){
 
     // await sell(3, 1);
     // await gQuote1Balance();
-    quantity = market.parseQuantity(10);
+    quantity = ethers.parseEther('10000');
     await sell(price, quantity);
 
     // match 0, old order index: 13.07 USD v
@@ -131,8 +131,8 @@ async function testPlaceSellOrder(){
 
 async function testPlaceBuyOrder(){
 
-    let price = market.parsePrice(1);
-    let quantity = market.parseQuantity(1);
+    let price = ethers.parseEther("1");
+    let quantity = ethers.parseEther("100");
     await sell(price, quantity);
     await sell(price, quantity);
     await sell(price, quantity);

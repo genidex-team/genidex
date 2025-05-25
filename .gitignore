@@ -3,7 +3,7 @@ node_modules
 package-lock.json
 artifacts
 # Hardhat files
-/cache
+cache
 
 
 # TypeChain files
@@ -16,5 +16,5 @@ artifacts
 .openzeppelin
 .deps
 lib
-artifacts_forge
-cache_forge
+foundry/out
+foundry/cache

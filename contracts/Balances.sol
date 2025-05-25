@@ -59,6 +59,7 @@ abstract contract Balances is GeniDexBase {
         require(tokenDecimals > 0, "token not listed");
 
         uint256 rawAmount = Helper._normalize(normalizedAmount, 18, tokenDecimals);
+        require(rawAmount > 0, "Deposit amount too small");
 
         IERC20 token = IERC20(tokenAddress);
         uint256 pre = token.balanceOf(address(this));

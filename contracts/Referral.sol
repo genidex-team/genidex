@@ -24,6 +24,12 @@ abstract contract Referral is GeniDexBase {
         return refereesOf[referrer];
     }
 
+    function getReferrer(
+        address referee
+    ) external view returns (address) {
+        return userReferrer[referee];
+    }
+
     function migrateReferees(
         bytes32[] calldata proof,
         address[] calldata referees

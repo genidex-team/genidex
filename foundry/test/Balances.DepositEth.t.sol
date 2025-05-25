@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import  "../contracts/GeniDex.sol";
+import {GeniDex, GeniDexHelper} from "./GeniDexHelper.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 //@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol
 // import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
@@ -13,33 +13,30 @@ contract DepositEth_Fuzz is Test {
     address payable bob;
 
     function setUp() public {
-        GeniDex impl = new GeniDex();
-        bytes memory initData =
-            abi.encodeWithSignature("initialize(address)", address(this));
-        ERC1967Proxy proxy = new ERC1967Proxy(address(impl), initData);
-        dex = GeniDex(payable(address(proxy)));
+        dex = GeniDexHelper.deploy();
 
         alice = payable(vm.addr(1));
-        bob   = payable(vm.addr(2));
-
-        vm.deal(alice, 1_000 ether);
-        vm.deal(bob,   1_000 ether);
     }
 
     function testFuzz_DepositEth(uint256 amount) public {
-        amount = bound(amount, 1 wei, 100 ether);
+        // amount = bound(amount, 1 wei, 1_000_000 ether);
+        vm.assume(amount>0 && amount <= 1_000_000 ether);
 
         uint256 beforeBalAlice = dex.balances(alice, address(0));
         uint256 beforeDexEth   = address(dex).balance;
 
         vm.prank(alice);
+        vm.deal(alice, amount);
         dex.depositEth{value: amount}();
 
+        // Alice's balance in GeniDex
         assertEq(
             dex.balances(alice, address(0)),
             beforeBalAlice + amount,
             "mapping update incorrect"
         );
+
+        // GeniDex's balance
         assertEq(
             address(dex).balance,
             beforeDexEth + amount,

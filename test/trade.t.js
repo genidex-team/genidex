@@ -33,7 +33,7 @@ async function main() {
         quoteAddress = market.data.quoteAddress;
         quoteDecimal = market.data.quoteDecimals;
         baseDecimal = market.data.baseDecimals;
-        price = market.parsePrice(0.000025);
+        price = market.parsePrice(2);
         quantity = market.parseQuantity(1);
         total = market.total(price, quantity);
     });

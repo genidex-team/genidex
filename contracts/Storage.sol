@@ -37,7 +37,7 @@ abstract contract Storage {
     mapping(bytes32 => uint256) public marketIDs; // hash => marketCounter
     mapping(address => mapping(address => uint256)) public balances; // account => token => balance
     mapping(address => uint256) public userPoints;
-    mapping(address => address) public userReferrer; // referral => referrer
+    mapping(address => address) public userReferrer; // referee => referrer
     mapping(address => address[]) public refereesOf; // referrer => [referees]
 
     uint256 public marketCounter;

@@ -28,5 +28,9 @@ echo "================= init geni_rewarder ===================="
 cd ../geni_rewarder && ./bin/init.sh $NETWORK
 
 echo "";echo "";
-echo "================= set_geni_rewarder_address ===================="
-cd ../genidex_contract && npx hardhat run scripts/set_geni_rewarder_address.js --network $NETWORK
+echo "================= set.geni.rewarder.address.js ===================="
+cd ../genidex_contract && npx hardhat run scripts/set.geni.rewarder.address.js --network $NETWORK
+
+echo "";echo "";
+echo "================= contribute.js ===================="
+cd ../geni_rewarder && npx hardhat run scripts/contribute.js --network $NETWORK
