@@ -1,13 +1,10 @@
-const logger = require('./helpers/logger');
-logger.overrideLog();
-require('./helpers/colors');
+require('@genidex/logger');
 
 require("@nomicfoundation/hardhat-toolbox");
 require('@nomicfoundation/hardhat-ethers');
 require('@openzeppelin/hardhat-upgrades');
 require("@nomicfoundation/hardhat-verify");
 require('hardhat-gas-reporter');
-require("@nomicfoundation/hardhat-foundry");
 
 const env = require('./helpers/env');
 env.loadDefaultEnv();
@@ -26,7 +23,7 @@ module.exports = {
           // viaIR: true,
           optimizer: {
             enabled: true,
-            runs: 20000,
+            runs: 200000,
           },
         },
       }

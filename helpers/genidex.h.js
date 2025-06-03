@@ -3,9 +3,8 @@ const { ethers, upgrades, network, run } = require('hardhat');
 const path = require('path');
 const fs = require('fs')
 const fn = require('./functions');
-const data = require('./data');
 
-const dataV2 = require('../../geni_data/index');
+const data = require('geni_data');
 
 class GeniDexError extends Error {
     constructor(message, data) {
@@ -44,8 +43,7 @@ class GeniDexHelper{
         const geniDexContract = await upgrades.deployProxy(GeniDex, [owner.address], {kind: 'uups', initializer: 'initialize'});
         await geniDexContract.waitForDeployment();
         console.log('\nGeniDex deployed to:', geniDexContract.target);
-        data.set('geniDexAddress', geniDexContract.target);
-        dataV2.setGeniDexAddress(network.name, geniDexContract.target);
+        data.setGeniDexAddress(network.name, geniDexContract.target);
 
         await fn.printGasUsed(geniDexContract.deploymentTransaction(), 'deployProxy');
         if(network.name == 'sepolia' || network.name == 'op_sepolia'){
@@ -58,12 +56,12 @@ class GeniDexHelper{
     }
 
     async upgrade(){
-        const proxyAddress = dataV2.getGeniDexAddress(network.name);//data.get('geniDexAddress');
+        const proxyAddress = data.getGeniDexAddress(network.name);
         console.log(proxyAddress);
         const GeniDex = await ethers.getContractFactory('GeniDex');
         console.log('Upgrading GeniDex...');
         const geniDexContract = await upgrades.upgradeProxy(proxyAddress, GeniDex, {kind: 'uups'});
-        dataV2.setGeniDexAddress(network.name, geniDexContract.target);
+        data.setGeniDexAddress(network.name, geniDexContract.target);
         console.log('GeniDex upgraded. Proxy address:', geniDexContract.target);
         // console.log(geniDex.deployTransaction);
         await fn.printGasUsed(geniDexContract.deployTransaction, 'upgradeProxy');
@@ -84,8 +82,8 @@ class GeniDexHelper{
     }
 
     async getContract(){
-        const geniDexAddress = data.get('geniDexAddress');
-        // console.log('geniDexAddress', geniDexAddress)
+        const geniDexAddress = data.getGeniDexAddress(network.name);
+        console.log('geniDexAddress', geniDexAddress)
         return await ethers.getContractAt('GeniDex', geniDexAddress);
     }
 

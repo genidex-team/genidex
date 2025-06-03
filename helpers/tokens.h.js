@@ -5,7 +5,7 @@ const fs = require('fs');
 const fn = require('./functions');
 const data = require('./data');
 const erc20Abi = require('../data/erc20.abi.json');
-var deployer, trader1, trader2;
+var deployer, trader1, trader2, trader3, trader4;
 
 class TokensHelper{
 
@@ -34,7 +34,7 @@ class TokensHelper{
     }
 
     async deploy(name, symbol, decimals){
-        [deployer, trader1, trader2] = await ethers.getSigners();
+        [deployer, trader1, trader2, trader3, trader4] = await ethers.getSigners();
         // let amount = (2**(256-decimals)-1).toString();
         const initialSupply = ethers.parseUnits("20000000000", decimals);
         // const initialSupply = 2n**256n-1n;
@@ -42,9 +42,11 @@ class TokensHelper{
         await contract.waitForDeployment();
         console.log(`${symbol} Deployed to ${contract.target}`);
         
-        let amount = ethers.parseUnits("10000000000", decimals);
+        let amount = ethers.parseUnits("1000000000", decimals);
         await contract.transfer(trader1, amount);
         await contract.transfer(trader2, amount);
+        await contract.transfer(trader3, amount);
+        await contract.transfer(trader4, amount);
         let token = {
             name: name,
             symbol: symbol,

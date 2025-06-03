@@ -11,9 +11,13 @@ async function main () {
   let arbAddress = data.get('arbAddress');
   let usdtAddress = data.get('usdtAddress');
   let daiAddress = data.get('daiAddress');
+  let minOrderAmount;
   console.log('opAddress', opAddress);
   console.log('usdtAddress', usdtAddress);
 
+  // let a = await geniDexContract.getAllMarkets();
+  // console.log(a)
+  // return;
   let markets = await geniDexHelper.getAllMarkets();
   console.log('markets', markets);
 
@@ -23,23 +27,28 @@ async function main () {
   // fn.printGasUsed(transaction, '\naddMarket');
 
   // gOP_gUSDT - 1
-  transaction = await geniDexContract.addMarket(opAddress, usdtAddress);
+  minOrderAmount = ethers.parseEther("10");
+  transaction = await geniDexContract.addMarket(opAddress, usdtAddress, minOrderAmount);
   fn.printGasUsed(transaction, '\naddMarket');
 
   // gETH_gUSDT - 2
-  transaction = await geniDexContract.addMarket(ethers.ZeroAddress, usdtAddress);
+  minOrderAmount = ethers.parseEther("10");
+  transaction = await geniDexContract.addMarket(ethers.ZeroAddress, usdtAddress, minOrderAmount);
   fn.printGasUsed(transaction, '\naddMarket');
 
   // gOP_gETH - 3
-  transaction = await geniDexContract.addMarket(opAddress, ethers.ZeroAddress);
+  minOrderAmount = ethers.parseEther("0.0004");
+  transaction = await geniDexContract.addMarket(opAddress, ethers.ZeroAddress, minOrderAmount);
   fn.printGasUsed(transaction, '\naddMarket');
 
   // gARB_gDAI - 4
-  transaction = await geniDexContract.addMarket(arbAddress, daiAddress);
+  minOrderAmount = ethers.parseEther("10");
+  transaction = await geniDexContract.addMarket(arbAddress, daiAddress, minOrderAmount);
   fn.printGasUsed(transaction, '\naddMarket');
 
   // gARB_gETH - 5
-  transaction = await geniDexContract.addMarket(arbAddress, ethers.ZeroAddress);
+  minOrderAmount = ethers.parseEther("0.0004");
+  transaction = await geniDexContract.addMarket(arbAddress, ethers.ZeroAddress, minOrderAmount);
   fn.printGasUsed(transaction, '\naddMarket');
 
   await geniDexContract.updateMarketIsRewardable(1, true);

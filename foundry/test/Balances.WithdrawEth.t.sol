@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import "forge-std/Test.sol";
 import "../contracts/GeniDex.sol";
 // import "./Functions.sol";
-import {GeniDex, GeniDexHelper} from "./GeniDexHelper.sol";
+import {GeniDex, GeniDexHelper} from "../src/GeniDexHelper.sol";
 
 /**
  * @title BalancesWithdrawEthTest (with fuzz‑testing)

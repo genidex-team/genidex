@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import "forge-std/Test.sol";
 // import "../contracts/GeniDex.sol";
 // import "../contracts/test/TestToken.sol";
-import {GeniDex, GeniDexHelper} from "./GeniDexHelper.sol";
+import {GeniDex, GeniDexHelper} from "../src/GeniDexHelper.sol";
 import "../contracts/test/TestToken.sol";
 import "../contracts/Helper.sol";
 
@@ -22,7 +22,7 @@ contract BalancesDepositTokenTest is Test {
         quoteToken =  new TestToken('USDT', 'USDT', 1_000_000_000*10**6, 6);
         dex.updateTokenIsUSD(address(quoteToken), true);
         baseToken =   new TestToken('OP', 'OP', 1_000_000_000*10**18, 18);
-        dex.addMarket(address(baseToken), address(quoteToken));
+        dex.addMarket(address(baseToken), address(quoteToken), 10*10**6);
     }
 
     // -----------------------------------------------------
@@ -39,7 +39,7 @@ contract BalancesDepositTokenTest is Test {
         vm.assume(rawAmount > 0);
 
         vm.startPrank(alice);
-        quoteToken.mint(rawAmount);
+        quoteToken.mint(alice, rawAmount);
         quoteToken.approve(address(dex), rawAmount);
         uint256 aliceBalPre   = quoteToken.balanceOf(alice);
         uint256 contractBalPre = quoteToken.balanceOf(address(dex));

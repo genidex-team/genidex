@@ -6,6 +6,8 @@ import  "../contracts/GeniDex.sol";
 import "../contracts/test/TestToken.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+uint256 constant WAD = 10**18;
+
 library GeniDexHelper {
 
     function deploy() public returns (GeniDex) {
@@ -15,4 +17,5 @@ library GeniDexHelper {
         ERC1967Proxy proxy = new ERC1967Proxy(address(impl), initData);
         return GeniDex(payable(address(proxy)));
     }
+
 }

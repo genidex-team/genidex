@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {GeniDex, GeniDexHelper} from "./GeniDexHelper.sol";
+import {GeniDex, GeniDexHelper} from "../src/GeniDexHelper.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 //@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol
 // import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";

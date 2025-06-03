@@ -1,7 +1,6 @@
 
 
 const { ethers, network } = require("hardhat");
-const { getArbitrumNetwork } = require('@arbitrum/sdk');
 const data = require('geni_data');
 const {factory} = require('geni_helper');
 
