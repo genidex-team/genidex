@@ -64,8 +64,8 @@ abstract contract SellOrders is GeniDexBase {
         }
 
         lv.total = price * quantity / WAD;
-        if (lv.total < 1) {
-            revert Helper.TotalTooSmall('SO49', lv.total, 1);
+        if (lv.total < tokens[lv.quoteAddress].minOrderAmount) {
+            revert Helper.TotalTooSmall('SO49', lv.total, tokens[lv.quoteAddress].minOrderAmount);
         }
 
         Order memory sellOrder = Order({
@@ -168,6 +168,40 @@ abstract contract SellOrders is GeniDexBase {
 
     function getSellOrders(uint256 marketId) public view returns (Order[] memory) {
         return sellOrders[marketId];
+    }
+
+    function getSellOrders(
+        uint256 marketId,
+        uint256 maxPrice
+    ) public view returns (OutputOrder[] memory rsSellOrders) {
+        Order[] storage orders = sellOrders[marketId];
+        uint256 totalOrders = orders.length;
+
+        // Count matching orders first
+        uint256 matchCount = 0;
+        for (uint256 i = 0; i < totalOrders; i++) {
+            if (orders[i].price <= maxPrice) {
+                matchCount++;
+            }
+        }
+
+        // Allocate exact size
+        rsSellOrders = new OutputOrder[](matchCount);
+
+        uint256 count = 0;
+        for (uint256 j = 0; j < totalOrders; j++) {
+            if (orders[j].price <= maxPrice) {
+                Order storage order = orders[j];
+                rsSellOrders[count] = OutputOrder({
+                    id: j,
+                    trader: order.trader,
+                    price: order.price,
+                    quantity: order.quantity
+                });
+                count++;
+            }
+        }
+        return rsSellOrders;
     }
 
     function cancelSellOrder(

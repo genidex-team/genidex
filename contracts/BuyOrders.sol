@@ -78,8 +78,8 @@ abstract contract BuyOrders is GeniDexBase {
         }
 
         lv.total = price * quantity / WAD;
-        if (lv.total < 1) {
-            revert Helper.TotalTooSmall('BO68', lv.total, 1);
+        if (lv.total < tokens[lv.quoteAddress].minOrderAmount) {
+            revert Helper.TotalTooSmall('BO68', lv.total, tokens[lv.quoteAddress].minOrderAmount);
         }
 
         mapping(address => uint256) storage buyerBalances = balances[buyOrder.trader];
@@ -186,6 +186,40 @@ abstract contract BuyOrders is GeniDexBase {
 
     function getBuyOrders(uint256 marketId) public view returns (Order[] memory) {
         return buyOrders[marketId];
+    }
+
+    function getBuyOrders(
+        uint256 marketId,
+        uint256 minPrice
+    ) public view returns (OutputOrder[] memory rsBuyOrders) {
+        Order[] storage orders = buyOrders[marketId];
+        uint256 totalOrders = orders.length;
+
+        // Count matching orders first
+        uint256 matchCount = 0;
+        for (uint256 i = 0; i < totalOrders; i++) {
+            if (orders[i].price >= minPrice) {
+                matchCount++;
+            }
+        }
+
+        // Allocate exact size
+        rsBuyOrders = new OutputOrder[](matchCount);
+
+        uint256 count = 0;
+        for (uint256 j = 0; j < totalOrders; j++) {
+            if (orders[j].price >= minPrice) {
+                Order storage order = orders[j];
+                rsBuyOrders[count] = OutputOrder({
+                    id: j,
+                    trader: order.trader,
+                    price: order.price,
+                    quantity: order.quantity
+                });
+                count++;
+            }
+        }
+        return rsBuyOrders;
     }
 
     function cancelBuyOrder(
