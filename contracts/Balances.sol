@@ -53,12 +53,15 @@ abstract contract Balances is GeniDexBase {
         uint256 normalizedAmount
     ) external nonReentrant whenNotPaused
     {
-        require(normalizedAmount > 0, "amount==0");
         Token storage sToken = tokens[tokenAddress];
         uint8 tokenDecimals = sToken.decimals;
         require(tokenDecimals > 0, "token not listed");
 
         uint256 rawAmount = Helper._normalize(normalizedAmount, 18, tokenDecimals);
+        if(tokenDecimals<18){
+            normalizedAmount = Helper._normalize(rawAmount, tokenDecimals, 18);
+        }
+        require(normalizedAmount > 0, "amount==0");
         require(rawAmount > 0, "Deposit amount too small");
 
         IERC20 token = IERC20(tokenAddress);
@@ -78,19 +81,23 @@ abstract contract Balances is GeniDexBase {
         external
         nonReentrant
     {
-        require(normalizedAmount != 0, "amount=0");
 
         uint256 userBal = balances[msg.sender][tokenAddress];
         // require(userBal >= normalizedAmount, "insufficient balance");
         if(normalizedAmount > userBal){
             revert Helper.InsufficientBalance('BL55', userBal, normalizedAmount);
         }
-        balances[msg.sender][tokenAddress] = userBal - normalizedAmount;
-
         Token storage sToken = tokens[tokenAddress];
-        uint8 decimals = sToken.decimals;
-        require(decimals != 0, "token unlisted");
-        uint256 rawAmount = Helper._normalize(normalizedAmount, 18, decimals);
+        uint8 tokenDecimals = sToken.decimals;
+        require(tokenDecimals != 0, "token unlisted");
+        uint256 rawAmount = Helper._normalize(normalizedAmount, 18, tokenDecimals);
+        if(tokenDecimals<18){
+            normalizedAmount = Helper._normalize(rawAmount, tokenDecimals, 18);
+        }
+        require(rawAmount > 0, "Withdraw amount too small");
+        require(normalizedAmount != 0, "amount=0");
+
+        balances[msg.sender][tokenAddress] = userBal - normalizedAmount;
 
         IERC20 token = IERC20(tokenAddress);
         uint256 pre = token.balanceOf(address(this));
