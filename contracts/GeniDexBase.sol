@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardTransientUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./Storage.sol";
 
 abstract contract GeniDexBase is
@@ -60,5 +61,42 @@ abstract contract GeniDexBase is
                 totalUnclaimedPoints += refPoints;
             }*/
         }
+    }
+
+    /**
+    * Fetch symbol and decimals of a token and cache them if not already stored.
+    *
+    * @param tokenAddress The address of the ERC20 token.
+    * @return symbol The token's symbol.
+    * @return decimals The token's decimals.
+    */
+    function getAndSetTokenMeta(address tokenAddress) public returns (string memory symbol, uint8 decimals) {
+        // If already cached, return from storage
+        Token storage info = tokens[tokenAddress];
+        if (bytes(info.symbol).length > 0) {
+            return (info.symbol, info.decimals);
+        }
+
+        // Otherwise, fetch from token contract
+        if(tokenAddress == address(0)){
+            symbol = 'ETH';
+            decimals = 18;
+        } else {
+            try IERC20Metadata(tokenAddress).symbol() returns (string memory _symbol) {
+                symbol = _symbol;
+            } catch {
+                revert("Failed to fetch symbol");
+            }
+
+            try IERC20Metadata(tokenAddress).decimals() returns (uint8 _decimals) {
+                decimals = _decimals;
+            } catch {
+                revert("Failed to fetch decimals");
+            }
+        }
+        tokens[tokenAddress].symbol = symbol;
+        tokens[tokenAddress].decimals = decimals;
+
+        return (symbol, decimals);
     }
 }

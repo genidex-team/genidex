@@ -7,44 +7,17 @@ import "./GeniDexBase.sol";
 
 abstract contract Markets is GeniDexBase {
 
-    function addMarket(address baseAddress, address quoteAddress) external {
-        uint8 baseDecimals;
-        uint8 quoteDecimals;
+    function addMarket(
+        address baseAddress, address quoteAddress, uint256 minOrderAmount
+    ) external onlyOwner {
         string memory baseSymbol;
         string memory quoteSymbol;
-        if(baseAddress == address(0)){ // ETH
-            baseDecimals = 18;
-            baseSymbol = 'ETH';
-        }else{
-            Token storage sBaseToken = tokens[baseAddress];
-            if(sBaseToken.decimals == 0){
-                ERC20 baseToken = ERC20(baseAddress);
-                baseDecimals = baseToken.decimals();
-                baseSymbol = baseToken.symbol();
-
-                sBaseToken.decimals = baseDecimals;
-                sBaseToken.symbol = baseSymbol;
-            }else{
-                baseDecimals = sBaseToken.decimals;
-                baseSymbol = sBaseToken.symbol;
-            }
-        }
-        if(quoteAddress == address(0)){ // ETH
-            quoteDecimals = 18;
-            quoteSymbol = 'ETH';
-        }else{
-            Token storage sQuoteToken = tokens[quoteAddress];
-            if(sQuoteToken.decimals == 0){
-                ERC20 quoteToken = ERC20(quoteAddress);
-                quoteDecimals = quoteToken.decimals();
-                quoteSymbol = quoteToken.symbol();
-
-                sQuoteToken.decimals = quoteDecimals;
-                sQuoteToken.symbol = quoteSymbol;
-            }else{
-                quoteDecimals = sQuoteToken.decimals;
-                quoteSymbol = sQuoteToken.symbol;
-            }
+        uint8 baseDecimals;
+        uint8 quoteDecimals;
+        (baseSymbol, baseDecimals) = getAndSetTokenMeta(baseAddress);
+        (quoteSymbol, quoteDecimals) = getAndSetTokenMeta(quoteAddress);
+        if(minOrderAmount>0 && tokens[quoteAddress].minOrderAmount==0){
+            tokens[quoteAddress].minOrderAmount = minOrderAmount;
         }
 
         bytes32 hash = generateMarketHash(baseAddress, quoteAddress);
@@ -58,6 +31,7 @@ abstract contract Markets is GeniDexBase {
             lastUpdatePrice: 0,
             baseAddress: baseAddress,
             quoteAddress: quoteAddress,
+            creator: msg.sender,
             isRewardable: false
         });
         marketIDs[hash] = marketCounter;
