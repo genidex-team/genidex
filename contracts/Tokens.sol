@@ -7,20 +7,25 @@ import "./GeniDexBase.sol";
 
 abstract contract Tokens is GeniDexBase {
 
-    function updateTokenIsUSD(address tokenAddress, bool isUSD) public onlyOwner(){
+    function updateTokenIsUSD(address tokenAddress, bool isUSD) external onlyOwner(){
         ERC20 token = ERC20(tokenAddress);
         tokens[tokenAddress].isUSD = isUSD;
         tokens[tokenAddress].decimals = token.decimals();
     }
 
-    function updateUSDMarketID(address tokenAddress, uint256 marketID) public onlyOwner{
+    function updateUSDMarketID(address tokenAddress, uint256 marketID) external onlyOwner{
         tokens[tokenAddress].usdMarketID = marketID;
+    }
+
+    function updateMinOrderAmount(address tokenAddress, uint256 minOrderAmount) external onlyOwner{
+        tokens[tokenAddress].minOrderAmount = minOrderAmount;
     }
 
     struct TokenInfo {
         address tokenAddress;
         string symbol;
         uint256 usdMarketID;
+        uint256 minOrderAmount;
         uint8 decimals;
         bool isUSD;
     }
@@ -34,6 +39,7 @@ abstract contract Tokens is GeniDexBase {
                 tokenAddress: tokenAddresses[i],
                 symbol: info.symbol,
                 usdMarketID: info.usdMarketID,
+                minOrderAmount: info.minOrderAmount,
                 decimals: info.decimals,
                 isUSD: info.isUSD
             });

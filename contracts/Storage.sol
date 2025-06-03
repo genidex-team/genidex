@@ -11,6 +11,7 @@ abstract contract Storage {
         uint256 lastUpdatePrice;
         address baseAddress;
         address quoteAddress; //ERC20 token address for the quote asset (e.g., stablecoin)
+        address creator;
         bool isRewardable;
     }
 
@@ -20,9 +21,17 @@ abstract contract Storage {
         uint256 quantity;
     }
 
+    struct OutputOrder {
+        uint256 id;
+        address trader;
+        uint256 price;
+        uint256 quantity;
+    }
+
     struct Token {
         string symbol;
         uint256 usdMarketID;
+        uint256 minOrderAmount;
         uint8 decimals;
         bool isUSD;
     }
