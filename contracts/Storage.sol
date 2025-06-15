@@ -32,6 +32,7 @@ abstract contract Storage {
         string symbol;
         uint256 usdMarketID;
         uint256 minOrderAmount;
+        uint256 minTransferAmount;
         uint8 decimals;
         bool isUSD;
     }

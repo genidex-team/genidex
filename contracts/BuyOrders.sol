@@ -48,7 +48,7 @@ abstract contract BuyOrders is GeniDexBase {
     ) external nonReentrant whenNotPaused
     {
         if (marketId > marketCounter) {
-            revert Helper.InvalidMarketId('BO55', marketId, marketCounter);
+            revert Helper.InvalidMarketId(marketId, marketCounter);
         }
         Market storage market = markets[marketId];
         //lv: local variable
@@ -79,13 +79,12 @@ abstract contract BuyOrders is GeniDexBase {
 
         lv.total = price * quantity / WAD;
         if (lv.total < tokens[lv.quoteAddress].minOrderAmount) {
-            revert Helper.TotalTooSmall('BO68', lv.total, tokens[lv.quoteAddress].minOrderAmount);
+            revert Helper.TotalTooSmall(lv.total, tokens[lv.quoteAddress].minOrderAmount);
         }
 
         mapping(address => uint256) storage buyerBalances = balances[buyOrder.trader];
         if(buyerBalances[lv.quoteAddress] < lv.total + _fee(lv.total)){
             revert Helper.InsufficientBalance({
-                code: 'BO73',
                 available: buyerBalances[lv.quoteAddress],
                 required: lv.total + _fee(lv.total)
             });
@@ -232,17 +231,17 @@ abstract contract BuyOrders is GeniDexBase {
         address quoteAddress = markets[marketId].quoteAddress;
 
         // if(orderIndex >= marketOrders.length){
-        //     revert Helper.InvalidValue({code: 'BO189', providedValue: orderIndex});
+        //     revert Helper.InvalidValue({providedValue: orderIndex});
         // }
 
         Order storage order = buyOrders[marketId][orderIndex];
         address trader = order.trader;
         if (msg.sender != trader) {
-            revert Helper.Unauthorized('BO186', msg.sender, trader);
+            revert Helper.Unauthorized(msg.sender, trader);
         }
         uint256 quantity = order.quantity;
         if (quantity == 0) {
-            revert Helper.OrderAlreadyCanceled('BO192', orderIndex);
+            revert Helper.OrderAlreadyCanceled(orderIndex);
         }
         uint256 total = quantity * order.price / WAD;
         order.quantity = 0;

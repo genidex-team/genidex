@@ -35,13 +35,13 @@ abstract contract Referral is GeniDexBase {
         address[] calldata referees
     ) external {
         if (referralRoot == bytes32(0)) {
-            revert Helper.ReferralRootNotSet("RF33");
+            revert Helper.ReferralRootNotSet();
         }
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(msg.sender, referees)))
         );
         if (!MerkleProof.verify(proof, referralRoot, leaf)) {
-            revert Helper.InvalidProof("RF39");
+            revert Helper.InvalidProof();
         }
         for (uint256 i = 0; i < referees.length; i++) {
             address referee = referees[i];

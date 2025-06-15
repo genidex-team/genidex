@@ -16,7 +16,7 @@ abstract contract Balances is GeniDexBase {
     function depositEth()
     external payable nonReentrant whenNotPaused {
         if(msg.value <= 0){
-            revert Helper.InvalidValue('BL16', msg.value);
+            revert Helper.InvalidValue(msg.value);
         }
         balances[msg.sender][address(0)] += msg.value;
         emit Deposit(msg.sender, address(0), msg.value);
@@ -27,10 +27,10 @@ abstract contract Balances is GeniDexBase {
     ) external nonReentrant whenNotPaused
     {
         if(amount <= 0){
-            revert Helper.InvalidValue('BL21', amount);
+            revert Helper.InvalidValue(amount);
         }
         if(amount > balances[msg.sender][address(0)]){
-            revert Helper.InsufficientBalance('BL24', balances[msg.sender][address(0)], amount);
+            revert Helper.InsufficientBalance(balances[msg.sender][address(0)], amount);
         }
         balances[msg.sender][address(0)] -= amount;
 
@@ -39,7 +39,6 @@ abstract contract Balances is GeniDexBase {
         bool success = payable(msg.sender).send(amount);
         if(!success){
             revert Helper.TransferFailed({
-                code: 'BL30',
                 from: address(this),
                 to: msg.sender,
                 amount: amount
@@ -55,14 +54,17 @@ abstract contract Balances is GeniDexBase {
     {
         Token storage sToken = tokens[tokenAddress];
         uint8 tokenDecimals = sToken.decimals;
-        require(tokenDecimals > 0, "token not listed");
+        if (tokenDecimals <= 0) {
+            revert Helper.TokenNotListed(tokenAddress);
+        }
 
         uint256 rawAmount = Helper._normalize(normalizedAmount, 18, tokenDecimals);
         if(tokenDecimals<18){
             normalizedAmount = Helper._normalize(rawAmount, tokenDecimals, 18);
         }
-        require(normalizedAmount > 0, "amount==0");
-        require(rawAmount > 0, "Deposit amount too small");
+        if(normalizedAmount < 1 || rawAmount < 1){
+            revert Helper.AmountTooSmall(normalizedAmount, 1);
+        }
 
         IERC20 token = IERC20(tokenAddress);
         uint256 pre = token.balanceOf(address(this));
@@ -85,11 +87,13 @@ abstract contract Balances is GeniDexBase {
         uint256 userBal = balances[msg.sender][tokenAddress];
         // require(userBal >= normalizedAmount, "insufficient balance");
         if(normalizedAmount > userBal){
-            revert Helper.InsufficientBalance('BL55', userBal, normalizedAmount);
+            revert Helper.InsufficientBalance(userBal, normalizedAmount);
         }
         Token storage sToken = tokens[tokenAddress];
         uint8 tokenDecimals = sToken.decimals;
-        require(tokenDecimals != 0, "token unlisted");
+        if (tokenDecimals <= 0) {
+            revert Helper.TokenNotListed(tokenAddress);
+        }
         uint256 rawAmount = Helper._normalize(normalizedAmount, 18, tokenDecimals);
         if(tokenDecimals<18){
             normalizedAmount = Helper._normalize(rawAmount, tokenDecimals, 18);

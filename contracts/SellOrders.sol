@@ -43,7 +43,7 @@ abstract contract SellOrders is GeniDexBase {
     ) external nonReentrant whenNotPaused
     {
         if (marketId > marketCounter) {
-            revert Helper.InvalidMarketId('SO43', marketId, marketCounter);
+            revert Helper.InvalidMarketId(marketId, marketCounter);
         }
         Market storage market = markets[marketId];
         //lv: local variable
@@ -65,7 +65,7 @@ abstract contract SellOrders is GeniDexBase {
 
         lv.total = price * quantity / WAD;
         if (lv.total < tokens[lv.quoteAddress].minOrderAmount) {
-            revert Helper.TotalTooSmall('SO49', lv.total, tokens[lv.quoteAddress].minOrderAmount);
+            revert Helper.TotalTooSmall(lv.total, tokens[lv.quoteAddress].minOrderAmount);
         }
 
         Order memory sellOrder = Order({
@@ -77,7 +77,6 @@ abstract contract SellOrders is GeniDexBase {
         mapping(address => uint256) storage sellerBalances = balances[sellOrder.trader];
         if(sellerBalances[lv.baseAddress] < quantity){
             revert Helper.InsufficientBalance({
-                code: 'SO58',
                 available: sellerBalances[lv.baseAddress],
                 required: quantity
             });
@@ -214,17 +213,17 @@ abstract contract SellOrders is GeniDexBase {
         address baseAddress = markets[marketId].baseAddress;
 
         // if(orderIndex >= marketOrders.length){
-        //     revert Helper.InvalidValue({code: 'SO159', providedValue: orderIndex});
+        //     revert Helper.InvalidValue({providedValue: orderIndex});
         // }
 
         Order storage order = sellOrders[marketId][orderIndex];
         address trader = order.trader;
         if (msg.sender != trader) {
-            revert Helper.Unauthorized('SO165', msg.sender, trader);
+            revert Helper.Unauthorized(msg.sender, trader);
         }
         uint256 quantity = order.quantity;
         if (quantity == 0) {
-            revert Helper.OrderAlreadyCanceled('SO169', orderIndex);
+            revert Helper.OrderAlreadyCanceled(orderIndex);
         }
         order.quantity = 0;
         balances[trader][baseAddress] += quantity;

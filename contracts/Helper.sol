@@ -1,8 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
 library Helper {
-    // Helper function to find the minimum of two values
+
+    error InsufficientBalance(uint256 available, uint256 required);
+    error TotalTooSmall(uint256 total, uint256 minimumRequired);
+    error AmountTooSmall(uint256 amount, uint256 minAmount);
+    error Unauthorized(address caller, address owner);
+    error InvalidValue(uint256 providedValue);
+    error OrderAlreadyCanceled(uint orderIndex);
+    error TransferFailed(address from, address to, uint amount);
+    error TokenTransferFailed(
+        string code,
+        address tokenAddress,
+        address from,
+        address to,
+        uint amount
+    );
+    error ReferralRootNotSet();
+    error InvalidProof();
+    error InvalidMarketId(uint256 marketId, uint256 marketCounter);
+    error MetadataFetchFailed(address token);
+    error TokenNotListed(address token);
+
     function min(uint256 a, uint256 b) internal pure returns (uint256) {
         return a < b ? a : b;
     }
@@ -90,20 +112,19 @@ library Helper {
         return amount / divisor;
     }
 
-    error InsufficientBalance(string code, uint256 available, uint256 required);
-    error TotalTooSmall(string code, uint256 total, uint256 minimumRequired);
-    error Unauthorized(string code, address caller, address owner);
-    error InvalidValue(string code, uint256 providedValue);
-    error OrderAlreadyCanceled(string code, uint orderIndex);
-    error TransferFailed(string code, address from, address to, uint amount);
-    error TokenTransferFailed(
-        string code,
-        address tokenAddress,
-        address from,
-        address to,
-        uint amount
-    );
-    error ReferralRootNotSet(string code);
-    error InvalidProof(string code);
-    error InvalidMarketId(string code, uint256 marketId, uint256 marketCounter);
+    function getSymbol(address token) internal view returns (string memory) {
+        try IERC20Metadata(token).symbol() returns (string memory _symbol) {
+            return _symbol;
+        } catch {
+            revert MetadataFetchFailed(token);
+        }
+    }
+
+    function getDecimals(address token) internal view returns (uint8) {
+        try IERC20Metadata(token).decimals() returns (uint8 _decimals) {
+            return _decimals;
+        } catch {
+            revert MetadataFetchFailed(token);
+        }
+    }
 }
