@@ -1,4 +1,14 @@
 {
     "solidity.compileUsingRemoteVersion": "v0.8.27+commit.40a35a09",
-    "solidity.packageDefaultDependenciesDirectories": ["node_modules"]
+    "solidity.packageDefaultDependenciesDirectories": [
+        "node_modules"
+    ],
+    "cSpell.words": [
+        "genidex",
+        "Initializable",
+        "keccak",
+        "mstore",
+        "Reentrancy",
+        "UUPS"
+    ]
 }
