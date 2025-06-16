@@ -21,11 +21,16 @@ abstract contract Tokens is GeniDexBase {
         tokens[tokenAddress].minOrderAmount = minOrderAmount;
     }
 
+    function updateMinTransferAmount(address tokenAddress, uint256 minTransferAmount) external onlyOwner{
+        tokens[tokenAddress].minTransferAmount = minTransferAmount;
+    }
+
     struct TokenInfo {
         address tokenAddress;
         string symbol;
         uint256 usdMarketID;
         uint256 minOrderAmount;
+        uint256 minTransferAmount;
         uint8 decimals;
         bool isUSD;
     }
@@ -40,6 +45,7 @@ abstract contract Tokens is GeniDexBase {
                 symbol: info.symbol,
                 usdMarketID: info.usdMarketID,
                 minOrderAmount: info.minOrderAmount,
+                minTransferAmount: info.minTransferAmount,
                 decimals: info.decimals,
                 isUSD: info.isUSD
             });

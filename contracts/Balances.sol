@@ -15,8 +15,9 @@ abstract contract Balances is GeniDexBase {
     // Ether
     function depositEth()
     external payable nonReentrant whenNotPaused {
-        if(msg.value <= 0){
-            revert Helper.InvalidValue(msg.value);
+        uint256 minTransferAmount = tokens[address(0)].minTransferAmount;
+        if(msg.value <= minTransferAmount){
+            revert Helper.AmountTooSmall(msg.value, minTransferAmount);
         }
         balances[msg.sender][address(0)] += msg.value;
         emit Deposit(msg.sender, address(0), msg.value);
@@ -26,8 +27,9 @@ abstract contract Balances is GeniDexBase {
         uint256 amount
     ) external nonReentrant whenNotPaused
     {
-        if(amount <= 0){
-            revert Helper.InvalidValue(amount);
+        uint256 minTransferAmount = tokens[address(0)].minTransferAmount;
+        if(amount <= minTransferAmount){
+            revert Helper.AmountTooSmall(amount, minTransferAmount);
         }
         if(amount > balances[msg.sender][address(0)]){
             revert Helper.InsufficientBalance(balances[msg.sender][address(0)], amount);
