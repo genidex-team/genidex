@@ -183,8 +183,110 @@ abstract contract BuyOrders is GeniDexBase {
         return (totalTradeValue, lastPrice);
     }
 
-    function getBuyOrders(uint256 marketId) public view returns (Order[] memory) {
-        return buyOrders[marketId];
+    function cancelBuyOrder(
+        uint256 marketId,
+        uint256 orderIndex
+    ) external nonReentrant whenNotPaused
+    {
+        //InvalidValue
+        // Order[] storage marketOrders = buyOrders[marketId];
+        address quoteAddress = markets[marketId].quoteAddress;
+
+        // if(orderIndex >= marketOrders.length){
+        //     revert Helper.InvalidValue({providedValue: orderIndex});
+        // }
+
+        Order storage order = buyOrders[marketId][orderIndex];
+        address trader = order.trader;
+        if (msg.sender != trader) {
+            revert Helper.Unauthorized(msg.sender, trader);
+        }
+        uint256 quantity = order.quantity;
+        if (quantity == 0) {
+            revert Helper.OrderAlreadyCanceled(orderIndex);
+        }
+        uint256 total = quantity * order.price / WAD;
+        order.quantity = 0;
+        balances[trader][quoteAddress] += total + _fee(total);
+    }
+
+    function getFilledOrders(
+        OrderType orderType,
+        uint256 marketID,
+        uint256 limit
+    ) external view returns (uint256[] memory) {
+        Order[] storage list;
+        if(orderType==OrderType.Buy){
+            list = buyOrders[marketID];
+        }else{
+            list = sellOrders[marketID];
+        }
+        uint256 len = list.length;
+        uint256 count = 0;
+        for (uint256 i=0; i < len; i++) {
+            if(list[i].quantity==0){
+                count++;
+                if(count>limit) break;
+            }
+        }
+        uint256[] memory result = new uint256[](count);
+        uint256 j = 0;
+
+        for (uint256 i = 0; i < len; i++) {
+            if (list[i].quantity == 0) {
+                result[j] = i;
+                j++;
+                if(count>limit) break;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * @notice Retrieve buy orders of `marketID` with pagination.
+     * @param marketID   The market identifier.
+     * @param offset     Index of the first element to return (0-based).
+     * @param limit      Maximum number of elements to return.
+     * @return orders    Array of Order with length <= limit.
+     */
+    function getOrders(
+        OrderType orderType,
+        uint256 marketID,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (Order[] memory orders) {
+        Order[] storage list;
+        if(orderType==OrderType.Buy){
+            list = buyOrders[marketID];
+        }else{
+            list = sellOrders[marketID];
+        }
+        uint256 len = list.length;
+
+        if (offset >= len) {
+            // Offset exceeds array length → return empty array
+            return new Order[](0);
+        }
+
+        // Calculate the end index without exceeding the array length
+        uint256 end = offset + limit;
+        if (end > len) {
+            end = len;
+        }
+
+        uint256 size = end - offset;
+        orders = new Order[](size);
+
+        // Copy each element from storage into memory
+        for (uint256 i; i < size; ++i) {
+            orders[i] = list[offset + i];
+        }
+    }
+
+    /// @notice Return the total number of buy orders for a market
+    function getBuyOrdersLength(uint256 marketID) external view returns (uint256) {
+        return buyOrders[marketID].length;
     }
 
     function getBuyOrders(
@@ -219,33 +321,6 @@ abstract contract BuyOrders is GeniDexBase {
             }
         }
         return rsBuyOrders;
-    }
-
-    function cancelBuyOrder(
-        uint256 marketId,
-        uint256 orderIndex
-    ) external nonReentrant whenNotPaused
-    {
-        //InvalidValue
-        // Order[] storage marketOrders = buyOrders[marketId];
-        address quoteAddress = markets[marketId].quoteAddress;
-
-        // if(orderIndex >= marketOrders.length){
-        //     revert Helper.InvalidValue({providedValue: orderIndex});
-        // }
-
-        Order storage order = buyOrders[marketId][orderIndex];
-        address trader = order.trader;
-        if (msg.sender != trader) {
-            revert Helper.Unauthorized(msg.sender, trader);
-        }
-        uint256 quantity = order.quantity;
-        if (quantity == 0) {
-            revert Helper.OrderAlreadyCanceled(orderIndex);
-        }
-        uint256 total = quantity * order.price / WAD;
-        order.quantity = 0;
-        balances[trader][quoteAddress] += total + _fee(total);
     }
 
 }

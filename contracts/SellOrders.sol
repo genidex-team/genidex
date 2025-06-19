@@ -165,8 +165,35 @@ abstract contract SellOrders is GeniDexBase {
         return lastPrice;
     }
 
-    function getSellOrders(uint256 marketId) public view returns (Order[] memory) {
-        return sellOrders[marketId];
+    function cancelSellOrder(
+        uint256 marketId,
+        uint256 orderIndex
+    ) external nonReentrant whenNotPaused
+    {
+
+        // Order[] storage marketOrders = sellOrders[marketId];
+        address baseAddress = markets[marketId].baseAddress;
+
+        // if(orderIndex >= marketOrders.length){
+        //     revert Helper.InvalidValue({providedValue: orderIndex});
+        // }
+
+        Order storage order = sellOrders[marketId][orderIndex];
+        address trader = order.trader;
+        if (msg.sender != trader) {
+            revert Helper.Unauthorized(msg.sender, trader);
+        }
+        uint256 quantity = order.quantity;
+        if (quantity == 0) {
+            revert Helper.OrderAlreadyCanceled(orderIndex);
+        }
+        order.quantity = 0;
+        balances[trader][baseAddress] += quantity;
+    }
+
+    /// @notice Return the total number of sell orders for a market
+    function getSellOrdersLength(uint256 marketID) external view returns (uint256) {
+        return sellOrders[marketID].length;
     }
 
     function getSellOrders(
@@ -201,32 +228,6 @@ abstract contract SellOrders is GeniDexBase {
             }
         }
         return rsSellOrders;
-    }
-
-    function cancelSellOrder(
-        uint256 marketId,
-        uint256 orderIndex
-    ) external nonReentrant whenNotPaused
-    {
-
-        // Order[] storage marketOrders = sellOrders[marketId];
-        address baseAddress = markets[marketId].baseAddress;
-
-        // if(orderIndex >= marketOrders.length){
-        //     revert Helper.InvalidValue({providedValue: orderIndex});
-        // }
-
-        Order storage order = sellOrders[marketId][orderIndex];
-        address trader = order.trader;
-        if (msg.sender != trader) {
-            revert Helper.Unauthorized(msg.sender, trader);
-        }
-        uint256 quantity = order.quantity;
-        if (quantity == 0) {
-            revert Helper.OrderAlreadyCanceled(orderIndex);
-        }
-        order.quantity = 0;
-        balances[trader][baseAddress] += quantity;
     }
 
 }

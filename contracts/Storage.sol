@@ -4,6 +4,12 @@ pragma solidity ^0.8.24;
 import "./Helper.sol";
 
 abstract contract Storage {
+
+    enum OrderType {
+        Buy,
+        Sell
+    }
+
     struct Market {
         string symbol;
         uint256 id;
