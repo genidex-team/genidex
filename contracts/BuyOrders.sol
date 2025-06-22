@@ -183,6 +183,8 @@ abstract contract BuyOrders is GeniDexBase {
         return (totalTradeValue, lastPrice);
     }
 
+    event OnCancelBuyOrder(address indexed trader, uint256 indexed marketId, uint256 orderIndex);
+
     function cancelBuyOrder(
         uint256 marketId,
         uint256 orderIndex
@@ -208,6 +210,8 @@ abstract contract BuyOrders is GeniDexBase {
         uint256 total = quantity * order.price / WAD;
         order.quantity = 0;
         balances[trader][quoteAddress] += total + _fee(total);
+
+        emit OnCancelBuyOrder(trader, marketId, orderIndex);
     }
 
     function getFilledOrders(
@@ -291,7 +295,8 @@ abstract contract BuyOrders is GeniDexBase {
 
     function getBuyOrders(
         uint256 marketId,
-        uint256 minPrice
+        uint256 minPrice,
+        uint256 limit
     ) public view returns (OutputOrder[] memory rsBuyOrders) {
         Order[] storage orders = buyOrders[marketId];
         uint256 totalOrders = orders.length;
@@ -301,6 +306,7 @@ abstract contract BuyOrders is GeniDexBase {
         for (uint256 i = 0; i < totalOrders; i++) {
             if (orders[i].price >= minPrice) {
                 matchCount++;
+                if(matchCount>limit) break;
             }
         }
 
@@ -318,6 +324,7 @@ abstract contract BuyOrders is GeniDexBase {
                     quantity: order.quantity
                 });
                 count++;
+                if(count>limit) break;
             }
         }
         return rsBuyOrders;

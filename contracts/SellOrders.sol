@@ -165,6 +165,9 @@ abstract contract SellOrders is GeniDexBase {
         return lastPrice;
     }
 
+
+    event OnCancelSellOrder(address indexed trader, uint256 indexed marketId, uint256 orderIndex);
+
     function cancelSellOrder(
         uint256 marketId,
         uint256 orderIndex
@@ -189,6 +192,8 @@ abstract contract SellOrders is GeniDexBase {
         }
         order.quantity = 0;
         balances[trader][baseAddress] += quantity;
+        
+        emit OnCancelSellOrder(trader, marketId, orderIndex);
     }
 
     /// @notice Return the total number of sell orders for a market
@@ -198,7 +203,8 @@ abstract contract SellOrders is GeniDexBase {
 
     function getSellOrders(
         uint256 marketId,
-        uint256 maxPrice
+        uint256 maxPrice,
+        uint256 limit
     ) public view returns (OutputOrder[] memory rsSellOrders) {
         Order[] storage orders = sellOrders[marketId];
         uint256 totalOrders = orders.length;
@@ -208,6 +214,7 @@ abstract contract SellOrders is GeniDexBase {
         for (uint256 i = 0; i < totalOrders; i++) {
             if (orders[i].price <= maxPrice) {
                 matchCount++;
+                if(matchCount>limit) break;
             }
         }
 
@@ -225,6 +232,7 @@ abstract contract SellOrders is GeniDexBase {
                     quantity: order.quantity
                 });
                 count++;
+                if(count>limit) break;
             }
         }
         return rsSellOrders;
