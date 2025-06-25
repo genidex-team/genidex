@@ -6,6 +6,7 @@ const geniDexHelper = require('./genidex.h');
 const fn = require('./functions');
 const erc20Abi = require('../data/erc20.abi.json');
 const data = require('./data');
+const { genidexSDK } = require('../config/config');
 
 const provider = ethers.provider;
 
@@ -20,7 +21,7 @@ class TokenWalletHelper{
         geniDexContract = await geniDexHelper.getContract();
     }
 
-    async widthdraw(tokenAddress, account, amount){
+    async withdraw(tokenAddress, account, amount){
         var decimals, symbol, balance, transaction;
         console.log(tokenAddress);
         // try{
@@ -48,7 +49,7 @@ class TokenWalletHelper{
         //     JSON.stringify(error, null, 2)
         // }
         
-        fn.printGasUsed(transaction, 'widthdraw '+amount + ' ' + symbol );
+        fn.printGasUsed(transaction, 'withdraw '+amount + ' ' + symbol );
         return transaction;
     }
 
@@ -65,9 +66,13 @@ class TokenWalletHelper{
             let token = new ethers.Contract(tokenAddress, erc20Abi, account);
             decimals = await token.decimals();
             symbol = await token.symbol();
-            var normAmount = ethers.parseEther(strAmount);
-            await token.approve(geniDexAddress, ethers.parseUnits(strAmount, decimals) );
-            transaction = await geniDexContract.connect(account).depositToken(tokenAddress, normAmount);
+
+            transaction = await genidexSDK.balances.depositToken({
+                signer: account,
+                tokenAddress: tokenAddress,
+                normAmount: ethers.parseEther(strAmount),
+                normApproveAmount: ethers.parseEther(strAmount)
+            })
         }
         fn.printGasUsed(transaction, `Deposit ${strAmount} ${symbol}` );
         return transaction;

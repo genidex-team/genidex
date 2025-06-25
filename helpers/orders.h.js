@@ -5,19 +5,24 @@ const geniDexHelper = require('./genidex.h');
 const fn = require('./functions');
 const markets = require('./markets.h');
 const tokens = require('../../genidex_nodejs/data/' + network.name + '_tokens.json');
+const config = require('../config/config');
 
 var geniDexContract, geniDexAddress;
 var deployer, trader1, trader2;
+const genidexSDK = config.genidexSDK;
 
 class BuyOrdersHelper {
 
     async init() {
+        await config.init();
         [deployer, trader1, trader2] = await ethers.getSigners();
         geniDexAddress = data.get('geniDexAddress');
         geniDexContract = await geniDexHelper.getContract();
+        // const markets = await config.genidexSDK.markets.getAllMarkets();
+        // console.log(markets); process.exit();
     }
 
-    async placeBuyOrder(account, marketId, price, quantity, referrer) {
+    async placeBuyOrder1(account, marketId, price, quantity, referrer) {
         if(!referrer){
             referrer = ethers.ZeroAddress;
         }
@@ -69,33 +74,20 @@ class BuyOrdersHelper {
             geniDexHelper.throwError(error);
         }
     }
-    
-    async placeBuyOrder_gasPrice(account, marketId, price_, quantity_, gas_rice = '10') {
-        console.log('account',account)
-        let market = markets.getMarket(marketId);
-        let { baseAddress, quoteAddress } = market;
-        let baseDecimals = tokens[baseAddress].decimals;
-        // console.log('market.priceDecimals', market.priceDecimals)
 
-        // price_ = fn.toFixedDecimal(price_, market.priceDecimals);
-        // quantity_ = fn.toFixedDecimal(quantity_, baseDecimals);
-
-        let price = ethers.parseUnits(price_.toString(), market.priceDecimals);
-        // console.log('price', price);
-        let quantity = ethers.parseUnits(quantity_.toString(), baseDecimals);
-
-        let sellOrderIDs = await this.getSellOrderIDsMatchingBuyOrder(marketId, { price: price, quantity: quantity });
-        // console.log('sellOrderIDs', sellOrderIDs);
-        let filledBuyOrderID = await this.randomFilledBuyOrderID(marketId);
-        // console.log('filledBuyOrderID', filledBuyOrderID);
-        console.log('sellOrderIDs', sellOrderIDs)
-        console.log('filledBuyOrderID', filledBuyOrderID)
-        // console.log('placeBuyOrder', {price: price_, quantity: quantity_});
-        let transaction = await geniDexContract.connect(account).placeBuyOrder(marketId, price, quantity, sellOrderIDs, filledBuyOrderID, { gasPrice: ethers.parseUnits(gas_rice, 'gwei') });
-        await fn.printGasUsed(transaction, 'placeBuyOrder');
+    async placeBuyOrder(signer, marketId, normPrice, normQuantity, referrer) {
+        if(!referrer){
+            referrer = ethers.ZeroAddress;
+        }
+        const tx = await genidexSDK.buyOrders.placeBuyOrder({
+            signer, marketId, normPrice, normQuantity
+        });
+        genidexSDK.tx.wait(tx.hash);
+        await fn.printGasUsed(tx, 'placeBuyOrder');
+        // const receipt = await genidexSDK.tx.wait(tx.hash);
     }
 
-    async placeSellOrder(account, marketId, price, quantity, referrer) {
+    async placeSellOrder1(account, marketId, price, quantity, referrer) {
         if(!referrer){
             referrer = ethers.ZeroAddress;
         }
@@ -145,6 +137,15 @@ class BuyOrdersHelper {
             geniDexHelper.throwError(error);
         }
         
+    }
+
+    async placeSellOrder(signer, marketId, normPrice, normQuantity, referrer) {
+        if(!referrer){
+            referrer = ethers.ZeroAddress;
+        }
+        const tx = await genidexSDK.sellOrders.placeSellOrder({signer, marketId, normPrice, normQuantity});
+        await fn.printGasUsed(tx, 'placeSellOrder');
+        const receipt = await genidexSDK.tx.wait(tx.hash);
     }
 
     async cancelBuyOrder(account, marketId, orderIndex) {

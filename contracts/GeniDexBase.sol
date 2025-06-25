@@ -42,7 +42,7 @@ abstract contract GeniDexBase is
 
     function _updatePoints(
         address quoteAddress,
-        address traderAddress,
+        uint80 userID,
         uint256 totalTradeValue
     ) internal {
         Token storage quoteToken = tokens[quoteAddress];
@@ -54,7 +54,7 @@ abstract contract GeniDexBase is
             points = usdMarket.price * totalTradeValue / WAD;
         }
         if(points > 0){
-            userPoints[traderAddress] += points;
+            userPoints[userID] += points;
             totalUnclaimedPoints += points;
 
             /*address ref = userReferrer[traderAddress];

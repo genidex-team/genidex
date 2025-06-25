@@ -3,6 +3,7 @@ const { ethers, upgrades } = require('hardhat');
 const fn = require('../helpers/functions');
 const data = require('../helpers/data');
 const geniDexHelper = require('../helpers/genidex.h')
+const {utils} = require("genidex-sdk")
 
 async function main () {
 
@@ -27,27 +28,27 @@ async function main () {
   // fn.printGasUsed(transaction, '\naddMarket');
 
   // gOP_gUSDT - 1
-  minOrderAmount = ethers.parseEther("10");
+  minOrderAmount = utils.parseUnits("10");
   transaction = await geniDexContract.addMarket(opAddress, usdtAddress, minOrderAmount);
   fn.printGasUsed(transaction, '\naddMarket');
 
   // gETH_gUSDT - 2
-  minOrderAmount = ethers.parseEther("10");
+  minOrderAmount = utils.parseUnits("10");
   transaction = await geniDexContract.addMarket(ethers.ZeroAddress, usdtAddress, minOrderAmount);
   fn.printGasUsed(transaction, '\naddMarket');
 
   // gOP_gETH - 3
-  minOrderAmount = ethers.parseEther("0.0004");
+  minOrderAmount = utils.parseUnits("0.0004");
   transaction = await geniDexContract.addMarket(opAddress, ethers.ZeroAddress, minOrderAmount);
   fn.printGasUsed(transaction, '\naddMarket');
 
   // gARB_gDAI - 4
-  minOrderAmount = ethers.parseEther("10");
+  minOrderAmount = utils.parseUnits("10");
   transaction = await geniDexContract.addMarket(arbAddress, daiAddress, minOrderAmount);
   fn.printGasUsed(transaction, '\naddMarket');
 
   // gARB_gETH - 5
-  minOrderAmount = ethers.parseEther("0.0004");
+  minOrderAmount = utils.parseUnits("0.0004");
   transaction = await geniDexContract.addMarket(arbAddress, ethers.ZeroAddress, minOrderAmount);
   fn.printGasUsed(transaction, '\naddMarket');
 

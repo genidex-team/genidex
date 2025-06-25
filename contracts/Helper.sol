@@ -8,7 +8,7 @@ library Helper {
     error InsufficientBalance(uint256 available, uint256 required);
     error TotalTooSmall(uint256 total, uint256 minimumRequired);
     error AmountTooSmall(uint256 amount, uint256 minAmount);
-    error Unauthorized(address caller, address owner);
+    error Unauthorized(uint80 caller, uint80 owner);
     error InvalidValue(uint256 providedValue);
     error OrderAlreadyCanceled(uint orderIndex);
     error TransferFailed(address from, address to, uint amount);
@@ -24,8 +24,10 @@ library Helper {
     error InvalidMarketId(uint256 marketId, uint256 marketCounter);
     error MetadataFetchFailed(address token);
     error TokenNotListed(address token);
+    error UserNotFound(address user);
 
-    function min(uint256 a, uint256 b) internal pure returns (uint256) {
+
+    function min(uint80 a, uint80 b) internal pure returns (uint80) {
         return a < b ? a : b;
     }
 

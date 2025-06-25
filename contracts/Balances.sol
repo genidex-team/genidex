@@ -12,6 +12,14 @@ abstract contract Balances is GeniDexBase {
     event Deposit(address indexed sender, address indexed token, uint256 amount);
     event Withdrawal(address indexed recipient, address indexed token, uint256 amount);
 
+    function getUserID(address account) internal returns(uint80){
+        uint80 userID = userIDs[account];
+        if(userID>0){
+            return userID;
+        }else{
+            return userIDs[account] = ++userCounter;
+        }
+    }
     // Ether
     function depositEth()
     external payable nonReentrant whenNotPaused {
@@ -19,7 +27,8 @@ abstract contract Balances is GeniDexBase {
         if(msg.value <= minTransferAmount){
             revert Helper.AmountTooSmall(msg.value, minTransferAmount);
         }
-        balances[msg.sender][address(0)] += msg.value;
+        uint80 userID = getUserID(msg.sender);
+        balances[userID][address(0)] += msg.value;
         emit Deposit(msg.sender, address(0), msg.value);
     }
 
@@ -31,10 +40,14 @@ abstract contract Balances is GeniDexBase {
         if(amount <= minTransferAmount){
             revert Helper.AmountTooSmall(amount, minTransferAmount);
         }
-        if(amount > balances[msg.sender][address(0)]){
-            revert Helper.InsufficientBalance(balances[msg.sender][address(0)], amount);
+        uint80 userID = userIDs[msg.sender];
+        if(userID<=0){
+            revert Helper.UserNotFound(msg.sender);
         }
-        balances[msg.sender][address(0)] -= amount;
+        if(amount > balances[userID][address(0)]){
+            revert Helper.InsufficientBalance(balances[userID][address(0)], amount);
+        }
+        balances[userID][address(0)] -= amount;
 
         emit Withdrawal(msg.sender, address(0), amount);
 
@@ -77,7 +90,8 @@ abstract contract Balances is GeniDexBase {
         if(received != rawAmount){
             normalizedAmount = Helper._normalize(received, tokenDecimals, 18);
         }
-        balances[msg.sender][tokenAddress] += normalizedAmount;
+        uint80 userID = getUserID(msg.sender);
+        balances[userID][tokenAddress] += normalizedAmount;
         emit Deposit(msg.sender, tokenAddress, normalizedAmount);
     }
 
@@ -85,8 +99,11 @@ abstract contract Balances is GeniDexBase {
         external
         nonReentrant
     {
-
-        uint256 userBal = balances[msg.sender][tokenAddress];
+        uint80 userID = userIDs[msg.sender];
+        if(userID<=0){
+            revert Helper.UserNotFound(msg.sender);
+        }
+        uint256 userBal = balances[userID][tokenAddress];
         // require(userBal >= normalizedAmount, "insufficient balance");
         if(normalizedAmount > userBal){
             revert Helper.InsufficientBalance(userBal, normalizedAmount);
@@ -103,7 +120,7 @@ abstract contract Balances is GeniDexBase {
         require(rawAmount > 0, "Withdraw amount too small");
         require(normalizedAmount != 0, "amount=0");
 
-        balances[msg.sender][tokenAddress] = userBal - normalizedAmount;
+        balances[userID][tokenAddress] = userBal - normalizedAmount;
 
         IERC20 token = IERC20(tokenAddress);
         uint256 pre = token.balanceOf(address(this));
@@ -115,11 +132,13 @@ abstract contract Balances is GeniDexBase {
     }
 
     function getTokenBalance(address tokenAddress) external view returns (uint256){
-        return balances[msg.sender][tokenAddress];
+        uint80 userID = userIDs[msg.sender];
+        return balances[userID][tokenAddress];
     }
 
     function getEthBalance() external view returns (uint256){
-        return balances[msg.sender][address(0)];
+        uint80 userID = userIDs[msg.sender];
+        return balances[userID][address(0)];
     }
 
 }

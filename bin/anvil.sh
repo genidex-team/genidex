@@ -1,9 +1,10 @@
 #!/bin/bash
 
+    # --block-time 1 \
+    # --quiet
+    # --no-mining \
 anvil \
-    --block-time 1 \
-    --disable-block-gas-limit \
     --threads 8 \
     --memory-limit 1073741824 \
-    --accounts 20 --balance 1000 \
-    --quiet
+    --accounts 30 --balance 1000 \
+    --block-base-fee-per-gas 0

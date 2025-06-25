@@ -18,7 +18,7 @@ async function main() {
 
     let initArgs = [initialOwner];
     const proxyAddress = await factory.deploy('GeniDex', proxySalt, initArgs, 'uups');
-    // console.log({proxyAddress, network: network.name});
+    console.log({proxyAddress, network: network.name});
     data.setGeniDexAddress(network.name, proxyAddress)
 
 }

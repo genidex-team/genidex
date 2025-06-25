@@ -22,6 +22,7 @@ abstract contract SellOrders is GeniDexBase {
         address quoteAddress;
         uint256 lastPrice;
         uint256 total;
+        uint80 userID;
     }
 
     /*struct placeSellOrderParams {
@@ -35,8 +36,8 @@ abstract contract SellOrders is GeniDexBase {
 
     function placeSellOrder(
         uint256 marketId,
-        uint256 price,
-        uint256 quantity,
+        uint80 price,
+        uint80 quantity,
         uint256 filledOrderId,
         uint256[] calldata buyOrderIDs,
         address referrer
@@ -51,8 +52,12 @@ abstract contract SellOrders is GeniDexBase {
             baseAddress: market.baseAddress,
             quoteAddress: market.quoteAddress,
             lastPrice: 0,
-            total: 0
+            total: 0,
+            userID: userIDs[msg.sender]
         });
+        if(lv.userID<=0){
+            revert Helper.UserNotFound(msg.sender);
+        }
 
         //set referrer
         if (userReferrer[msg.sender] == address(0)
@@ -63,18 +68,18 @@ abstract contract SellOrders is GeniDexBase {
             refereesOf[referrer].push(msg.sender);
         }
 
-        lv.total = price * quantity / WAD;
+        lv.total = uint256(price) * quantity / WAD;
         if (lv.total < tokens[lv.quoteAddress].minOrderAmount) {
             revert Helper.TotalTooSmall(lv.total, tokens[lv.quoteAddress].minOrderAmount);
         }
 
         Order memory sellOrder = Order({
-            trader: msg.sender,
+            userID: lv.userID,
             price: price,
             quantity: quantity
         });
 
-        mapping(address => uint256) storage sellerBalances = balances[sellOrder.trader];
+        mapping(address => uint256) storage sellerBalances = balances[lv.userID];
         if(sellerBalances[lv.baseAddress] < quantity){
             revert Helper.InsufficientBalance({
                 available: sellerBalances[lv.baseAddress],
@@ -99,7 +104,7 @@ abstract contract SellOrders is GeniDexBase {
                 orderIndex = marketSellOrders.length-1;
             }
         }
-        emit OnPlaceSellOrder(marketId, sellOrder.trader, orderIndex,
+        emit OnPlaceSellOrder(marketId, msg.sender, orderIndex,
             price, quantity, sellOrder.quantity, lv.lastPrice, referrer);
     }
 
@@ -126,12 +131,12 @@ abstract contract SellOrders is GeniDexBase {
             }
             uint256 buyOrderID = buyOrderIDs[i];
             Order storage buyOrder = marketBuyOrders[buyOrderID];
-            uint256 buyOrderPrice = buyOrder.price;
-            uint256 buyOrderQuantity = buyOrder.quantity;
+            uint80 buyOrderPrice = buyOrder.price;
+            uint80 buyOrderQuantity = buyOrder.quantity;
             if (buyOrderPrice >= sellOrder.price && buyOrderQuantity>0) {
 
-                uint256 tradeQuantity = Helper.min(buyOrderQuantity, sellOrder.quantity);
-                uint256 tradeValue = buyOrderPrice * tradeQuantity / WAD;
+                uint80 tradeQuantity = Helper.min(buyOrderQuantity, sellOrder.quantity);
+                uint256 tradeValue = uint256(buyOrderPrice) * tradeQuantity / WAD;
 
                 buyOrder.quantity -= tradeQuantity;
                 sellOrder.quantity -= tradeQuantity;
@@ -139,7 +144,7 @@ abstract contract SellOrders is GeniDexBase {
                 // totalTradeQuantity += tradeQuantity;
                 totalTradeValue += tradeValue;
 
-                balances[buyOrder.trader][lv.baseAddress] += tradeQuantity;
+                balances[buyOrder.userID][lv.baseAddress] += tradeQuantity;
                 lastPrice = buyOrderPrice;
             }
             unchecked{
@@ -148,12 +153,12 @@ abstract contract SellOrders is GeniDexBase {
         }
         if(totalTradeValue>0){
             uint256 totalFee = _fee(totalTradeValue);
-            balances[sellOrder.trader][lv.quoteAddress] += (totalTradeValue - totalFee);
-            balances[feeReceiver][lv.quoteAddress] += 2*totalFee;
+            balances[sellOrder.userID][lv.quoteAddress] += (totalTradeValue - totalFee);
+            balances[1][lv.quoteAddress] += 2*totalFee;
 
             //update geniPoints
             if(market.isRewardable){
-                _updatePoints(lv.quoteAddress, sellOrder.trader, totalTradeValue);
+                _updatePoints(lv.quoteAddress, sellOrder.userID, totalTradeValue);
             }
 
             // update market.price
@@ -174,6 +179,10 @@ abstract contract SellOrders is GeniDexBase {
     ) external nonReentrant whenNotPaused
     {
 
+        uint80 userID = userIDs[msg.sender];
+        if(userID<=0){
+            revert Helper.UserNotFound(msg.sender);
+        }
         // Order[] storage marketOrders = sellOrders[marketId];
         address baseAddress = markets[marketId].baseAddress;
 
@@ -182,18 +191,18 @@ abstract contract SellOrders is GeniDexBase {
         // }
 
         Order storage order = sellOrders[marketId][orderIndex];
-        address trader = order.trader;
-        if (msg.sender != trader) {
-            revert Helper.Unauthorized(msg.sender, trader);
+        uint80 orderUserID = order.userID;
+        if (userID != orderUserID) {
+            revert Helper.Unauthorized(userID, orderUserID);
         }
         uint256 quantity = order.quantity;
         if (quantity == 0) {
             revert Helper.OrderAlreadyCanceled(orderIndex);
         }
         order.quantity = 0;
-        balances[trader][baseAddress] += quantity;
+        balances[orderUserID][baseAddress] += quantity;
         
-        emit OnCancelSellOrder(trader, marketId, orderIndex);
+        emit OnCancelSellOrder(msg.sender, marketId, orderIndex);
     }
 
     /// @notice Return the total number of sell orders for a market
@@ -227,7 +236,7 @@ abstract contract SellOrders is GeniDexBase {
                 Order storage order = orders[j];
                 rsSellOrders[count] = OutputOrder({
                     id: j,
-                    trader: order.trader,
+                    userID: order.userID,
                     price: order.price,
                     quantity: order.quantity
                 });

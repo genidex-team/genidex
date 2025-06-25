@@ -5,6 +5,8 @@ require('@nomicfoundation/hardhat-ethers');
 require('@openzeppelin/hardhat-upgrades');
 require("@nomicfoundation/hardhat-verify");
 require('hardhat-gas-reporter');
+// require("hardhat-contract-sizer");
+
 
 const env = require('./helpers/env');
 env.loadDefaultEnv();
@@ -13,7 +15,11 @@ const data = require('geni_data');
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  // solidity: "0.8.0",
+  contractSizer: {
+    alphaSort: true,
+    runOnCompile: true,
+    disambiguatePaths: false,
+  },
   solidity: {
     compilers: [
       {
@@ -23,7 +29,7 @@ module.exports = {
           // viaIR: true,
           optimizer: {
             enabled: true,
-            runs: 200000,
+            runs: 400,
           },
         },
       }
@@ -31,7 +37,8 @@ module.exports = {
   },
   defaultNetwork: 'hardhat',
   data: {
-    gasPrice: 60n*10n**9n,// ETH - wei/gas
+    gasPrice: 5000n*10n**6n,// ETH - wei/gas
+    // gasPrice: 60n*10n**9n,// ETH - wei/gas
     // gasPrice: 600n*10n**6n,// ETH - wei/gas
     // gasPrice: 13n*10n**9n/1000n,// Arbitrum - wei/gas
     ethPrice: 3000 //  USD/ETH

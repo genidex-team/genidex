@@ -42,6 +42,7 @@ async function main() {
   // console.log(gas);
   console.log('gas deployed to:', gas.target);
   
+  /*
   transaction = await gas.externalFunction();
   await fn.printGasUsed(transaction, 'externalFunction');
 
@@ -169,19 +170,34 @@ async function main() {
   console.log('From second updateUint256', fromSecondGasUsedFormat.yellow, fn.gasToUSD(fromSecondGasUsed).yellow, 'USD');
 
 
+  
   rs = await gas.test();
   console.log('test', rs);
   // await fn.printGasUsed(transaction, 'test');
+  */
 
-  rs = await gas.getLatestPrice();
-  console.log('getLatestPrice', rs);
-  // await fn.printGasUsed(rs, 'getLatestPrice');
+  transaction = await gas.addOrder1();
+  await fn.printGasUsed(transaction, 'addOrder1');
 
-  transaction = await gas.testPriceFeed();
-  await fn.printGasUsed(transaction, 'testPriceFeed');
+  transaction = await gas.addOrder2();
+  await fn.printGasUsed(transaction, 'addOrder2');
+
+  transaction = await gas.addOrder3();
+  await fn.printGasUsed(transaction, 'addOrder3');
   
-  transaction = await gas.testPriceFeed2();
-  await fn.printGasUsed(transaction, 'testPriceFeed2');
+  transaction = await gas.readOrder1();
+  await fn.printGasUsed(transaction, 'readOrder1');
+
+  transaction = await gas.readOrder2();
+  await fn.printGasUsed(transaction, 'readOrder2');
+
+  transaction = await gas.readOrder3();
+  await fn.printGasUsed(transaction, 'readOrder3');
+
+  
+
+  transaction = await gas.addBalance1();
+  await fn.printGasUsed(transaction, '\naddBalance1');
 
 }
 

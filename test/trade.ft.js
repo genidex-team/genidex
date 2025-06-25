@@ -1,6 +1,7 @@
 
 const { ethers, upgrades, waffle, network } = require('hardhat');
 const expect = require('chai').expect;
+// const {ethers} = require('ethers');
 
 const data = require('../helpers/data');
 const geniDexHelper = require('../helpers/genidex.h');
@@ -10,6 +11,8 @@ const tokenWalletHelper = require('../helpers/token.wallet.h');
 const ordersHelper = require('../helpers/orders.h');
 const marketsHelper = require('../helpers/markets.h');
 const Market = require('../helpers/market.h');
+const { genidexSDK } = require('../config/config');
+const { utils } = require('genidex-sdk');
 
 var geniDexContract;
 var marketId = 1;
@@ -19,11 +22,30 @@ var initAmount = '100000.0';
 async function main() {
     
     before(async ()=>{
+        // geniDexContract = await geniDexHelper.deploy();
+        geniDexContract = await geniDexHelper.upgrade();
+        // geniDexContract = await geniDexHelper.getContract();
+        geniDexAddress = geniDexContract.target;
+
+        await geniDexHelper.init();
+        await tokenWalletHelper.init();
+        await ordersHelper.init();
+
         [deployer, trader1, trader2, feeReceiver] = await ethers.getSigners();
+        
+        price = ethers.parseEther("0.3");
+        quantity = ethers.parseEther("100");
+        trader1 = await genidexSDK.getSigner(1);
+        trader2 = await genidexSDK.getSigner(2);
+        // console.log(trader1);
+        // await ordersHelper.placeBuyOrder(trader1, marketId, price, quantity);
+        // process.exit();
+
         console.log('trader1 - buyer:', trader1.address);
         console.log('trader2 - buyer:', trader2.address);
         // console.log('feeReceiver', feeReceiver.address);
         market = new Market(marketId);
+        // console.log({market});
         baseAddress = market.data.baseAddress;
         quoteAddress = market.data.quoteAddress;
         quoteDecimal = market.data.quoteDecimals;
@@ -35,14 +57,7 @@ async function main() {
 
     describe('Trade', () => {
         it("Deployed", async ()=>{
-            // geniDexContract = await geniDexHelper.deploy();
-            geniDexContract = await geniDexHelper.upgrade();
-            // geniDexContract = await geniDexHelper.getContract();
-            geniDexAddress = geniDexContract.target;
-
-            await geniDexHelper.init();
-            await tokenWalletHelper.init();
-            await ordersHelper.init();
+            
         });
 
         it("Deposit", async ()=>{
@@ -52,11 +67,11 @@ async function main() {
                 await tokenWalletHelper.deposit(quoteAddress, trader1, initAmount);
                 await tokenWalletHelper.deposit(baseAddress, trader2, initAmount);
 
-                // await tokenWalletHelper.getWalletBalance(quoteAddress, trader1);
-                await tokenWalletHelper.getGeniDexBalance('trader1', quoteAddress, trader1);
+                // // await tokenWalletHelper.getWalletBalance(quoteAddress, trader1);
+                // await tokenWalletHelper.getGeniDexBalance('trader1', quoteAddress, trader1);
                 
-                // await tokenWalletHelper.getWalletBalance(baseAddress, trader2);
-                await tokenWalletHelper.getGeniDexBalance('trader2', baseAddress, trader2);
+                // // await tokenWalletHelper.getWalletBalance(baseAddress, trader2);
+                // await tokenWalletHelper.getGeniDexBalance('trader2', baseAddress, trader2);
             // }
             
         });
@@ -67,14 +82,8 @@ async function main() {
             // expect(await gQuote2Balance()).to.equal("0.0");
             // expect(await gBase2Balance()).to.equal(initAmount);
 
-            console.log('buyOrders', await ordersHelper.getDescFormatBuyOrders(marketId) );
-            console.log('sellOrders', await ordersHelper.getAscFormatSellOrders(marketId) );
-
             await testPlaceSellOrder();
             // await testPlaceBuyOrder();
-
-            console.log('buyOrders', await ordersHelper.getDescFormatBuyOrders(marketId) );
-            console.log('sellOrders', await ordersHelper.getAscFormatSellOrders(marketId) );
 
             return;
             /*
@@ -102,23 +111,22 @@ async function main() {
 }
 
 async function testPlaceSellOrder(){
-    let price = ethers.parseEther("1");
-    let quantity = ethers.parseEther("1000");
-    await buy(price, quantity);
-    await buy(price, quantity);
-    await buy(price, quantity);
-    await buy(price, quantity);
-    await buy(price, quantity);
-    await buy(price, quantity);
-    await buy(price, quantity);
-    await buy(price, quantity);
-    await buy(price, quantity);
-    await buy(price, quantity);
+    let price = utils.parseUnits("1");
+    let quantity = utils.parseUnits("10");
+
+    // let price = ethers.parseUnits("1", 8);
+    // let quantity = ethers.parseUnits("1", 8);
+    let buyOrders = [];
+    for(var i=0; i<400; i++){
+        console.log(i);
+        await buy(price, quantity);
+    }
+    // await Promise.all(buyOrders);
     // console.log('sellOrders', await ordersHelper.getAscFormatSellOrders(marketId) );
 
     // await sell(3, 1);
     // await gQuote1Balance();
-    quantity = ethers.parseEther('10000');
+    quantity = utils.parseUnits('4000');
     await sell(price, quantity);
 
     // match 0, old order index: 13.07 USD v
