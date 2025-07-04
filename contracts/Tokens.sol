@@ -7,6 +7,61 @@ import "./GeniDexBase.sol";
 
 abstract contract Tokens is GeniDexBase {
 
+    event TokenListed(address indexed token, string symbol);
+
+    function listToken(
+        address tokenAddress,
+        uint256 usdMarketID,
+        uint256 minOrderAmount,
+        uint256 minTransferAmount,
+        bool isUSD,
+        bool autoDetect,
+        string calldata manualSymbol,
+        uint8 manualDecimals
+    ) external onlyOwner {
+        // if (tokenAddress == address(0)) revert Helper.InvalidTokenAddress();
+        if (isTokenListed[tokenAddress]) revert Helper.TokenAlreadyListed(tokenAddress);
+
+        string memory symbol;
+        uint8 decimals;
+
+        if (autoDetect) {
+            try IERC20Metadata(tokenAddress).symbol() returns (string memory sym) {
+                symbol = sym;
+            } catch {
+                revert Helper.SymbolFetchFailed();
+            }
+
+            try IERC20Metadata(tokenAddress).decimals() returns (uint8 dec) {
+                decimals = dec;
+            } catch {
+                revert Helper.DecimalsFetchFailed();
+            }
+        }
+        else if(tokenAddress == address(0)){
+            symbol = 'ETH';
+            decimals = 18;
+        } else {
+            if (bytes(manualSymbol).length == 0) revert Helper.ManualSymbolRequired();
+            if (manualDecimals == 0) revert Helper.ManualDecimalsRequired();
+            symbol = manualSymbol;
+            decimals = manualDecimals;
+        }
+
+        tokens[tokenAddress] = Token({
+            symbol: symbol,
+            usdMarketID: usdMarketID,
+            minOrderAmount: minOrderAmount,
+            minTransferAmount: minTransferAmount,
+            decimals: decimals,
+            isUSD: isUSD
+        });
+
+        isTokenListed[tokenAddress] = true;
+
+        emit TokenListed(tokenAddress, symbol);
+    }
+
     function updateTokenIsUSD(address tokenAddress, bool isUSD) external onlyOwner(){
         ERC20 token = ERC20(tokenAddress);
         tokens[tokenAddress].isUSD = isUSD;
