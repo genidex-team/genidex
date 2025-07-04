@@ -7,7 +7,6 @@ require("@nomicfoundation/hardhat-verify");
 require('hardhat-gas-reporter');
 // require("hardhat-contract-sizer");
 
-
 const env = require('./helpers/env');
 env.loadDefaultEnv();
 
@@ -26,10 +25,10 @@ module.exports = {
         version: "0.8.27",
         settings: {
           evmVersion: "cancun",
-          // viaIR: true,
+          viaIR: true,
           optimizer: {
             enabled: true,
-            runs: 400,
+            runs: 1400,
           },
         },
       }
@@ -37,7 +36,8 @@ module.exports = {
   },
   defaultNetwork: 'hardhat',
   data: {
-    gasPrice: 5000n*10n**6n,// ETH - wei/gas
+    gasPrice: 2000n*10n**6n,// ETH - wei/gas // ethereum
+    // gasPrice: 15n*10n**6n,// ETH - wei/gas // optimism
     // gasPrice: 60n*10n**9n,// ETH - wei/gas
     // gasPrice: 600n*10n**6n,// ETH - wei/gas
     // gasPrice: 13n*10n**9n/1000n,// Arbitrum - wei/gas
