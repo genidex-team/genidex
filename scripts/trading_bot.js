@@ -70,4 +70,4 @@ main().catch((error) => {
 
 setTimeout(() => {
     console.log('Script will exit after 1 hour');
-}, 3600000); // 1 giờ
+}, 3600000);

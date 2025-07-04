@@ -22,13 +22,15 @@ abstract contract Points is GeniDexBase {
         return totalUnclaimedPoints;
     }
 
-    function getUserPoints(address user) external view returns (uint256) {
-        return userPoints[user];
+    function getUserPoints(address userAddress) external view returns (uint256) {
+        uint80 userID = userIDs[userAddress];
+        return userPoints[userID];
     }
 
-    function deductUserPoints(address user, uint256 pointsToDeduct) external onlyRewarder {
-        require(userPoints[user] >= pointsToDeduct, "Not enough points");
-        userPoints[user] -= pointsToDeduct;
+    function deductUserPoints(address userAddress, uint256 pointsToDeduct) external onlyRewarder {
+        uint80 userID = userIDs[userAddress];
+        require(userPoints[userID] >= pointsToDeduct, "Not enough points");
+        userPoints[userID] -= pointsToDeduct;
         totalUnclaimedPoints -= pointsToDeduct;
     }
 

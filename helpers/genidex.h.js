@@ -40,10 +40,15 @@ class GeniDexHelper{
         const [owner] = await ethers.getSigners();
         console.log('owner.address', owner.address)
 
-        const geniDexContract = await upgrades.deployProxy(GeniDex, [owner.address], {kind: 'uups', initializer: 'initialize'});
+        const geniDexContract = await upgrades.deployProxy(
+            GeniDex,
+            [owner.address],
+            {kind: 'uups', initializer: 'initialize'}
+        );
         await geniDexContract.waitForDeployment();
         console.log('\nGeniDex deployed to:', geniDexContract.target);
         data.setGeniDexAddress(network.name, geniDexContract.target);
+        process.exit()
 
         await fn.printGasUsed(geniDexContract.deploymentTransaction(), 'deployProxy');
         if(network.name == 'sepolia' || network.name == 'op_sepolia'){
@@ -56,11 +61,14 @@ class GeniDexHelper{
     }
 
     async upgrade(){
+
         const proxyAddress = data.getGeniDexAddress(network.name);
         console.log(proxyAddress);
         const GeniDex = await ethers.getContractFactory('GeniDex');
         console.log('Upgrading GeniDex...');
-        const geniDexContract = await upgrades.upgradeProxy(proxyAddress, GeniDex, {kind: 'uups'});
+        const geniDexContract = await upgrades.upgradeProxy(proxyAddress, GeniDex, {
+            kind: 'uups'
+        });
         data.setGeniDexAddress(network.name, geniDexContract.target);
         console.log('GeniDex upgraded. Proxy address:', geniDexContract.target);
         // console.log(geniDex.deployTransaction);
