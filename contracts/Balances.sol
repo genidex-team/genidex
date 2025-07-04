@@ -12,24 +12,18 @@ abstract contract Balances is GeniDexBase {
     event Deposit(address indexed sender, address indexed token, uint256 amount);
     event Withdrawal(address indexed recipient, address indexed token, uint256 amount);
 
-    function getUserID(address account) internal returns(uint80){
-        uint80 userID = userIDs[account];
-        if(userID>0){
-            return userID;
-        }else{
-            return userIDs[account] = ++userCounter;
-        }
-    }
     // Ether
     function depositEth()
     external payable nonReentrant whenNotPaused {
         uint256 minTransferAmount = tokens[address(0)].minTransferAmount;
-        if(msg.value <= minTransferAmount){
-            revert Helper.AmountTooSmall(msg.value, minTransferAmount);
+        uint256 rawAmount = msg.value;
+        uint256 normAmount = Helper._normalize(rawAmount, 18, 8);
+        if(normAmount <= minTransferAmount){
+            revert Helper.AmountTooSmall(normAmount, minTransferAmount);
         }
-        uint80 userID = getUserID(msg.sender);
-        balances[userID][address(0)] += msg.value;
-        emit Deposit(msg.sender, address(0), msg.value);
+        uint80 userID = generateUserID(msg.sender);
+        balances[userID][address(0)] += normAmount;
+        emit Deposit(msg.sender, address(0), normAmount);
     }
 
     function withdrawEth(
@@ -51,7 +45,8 @@ abstract contract Balances is GeniDexBase {
 
         emit Withdrawal(msg.sender, address(0), amount);
 
-        bool success = payable(msg.sender).send(amount);
+        uint256 rawAmount = Helper._normalize(amount, 8, 18);
+        bool success = payable(msg.sender).send(rawAmount);
         if(!success){
             revert Helper.TransferFailed({
                 from: address(this),
@@ -73,9 +68,9 @@ abstract contract Balances is GeniDexBase {
             revert Helper.TokenNotListed(tokenAddress);
         }
 
-        uint256 rawAmount = Helper._normalize(normalizedAmount, 18, tokenDecimals);
-        if(tokenDecimals<18){
-            normalizedAmount = Helper._normalize(rawAmount, tokenDecimals, 18);
+        uint256 rawAmount = Helper._normalize(normalizedAmount, 8, tokenDecimals);
+        if(tokenDecimals<8){
+            normalizedAmount = Helper._normalize(rawAmount, tokenDecimals, 8);
         }
         if(normalizedAmount < 1 || rawAmount < 1){
             revert Helper.AmountTooSmall(normalizedAmount, 1);
@@ -88,9 +83,9 @@ abstract contract Balances is GeniDexBase {
         // require(received == rawAmount, "transfer mismatch");
         require(received > 0, "no tokens received");
         if(received != rawAmount){
-            normalizedAmount = Helper._normalize(received, tokenDecimals, 18);
+            normalizedAmount = Helper._normalize(received, tokenDecimals, 8);
         }
-        uint80 userID = getUserID(msg.sender);
+        uint80 userID = generateUserID(msg.sender);
         balances[userID][tokenAddress] += normalizedAmount;
         emit Deposit(msg.sender, tokenAddress, normalizedAmount);
     }
@@ -113,9 +108,9 @@ abstract contract Balances is GeniDexBase {
         if (tokenDecimals <= 0) {
             revert Helper.TokenNotListed(tokenAddress);
         }
-        uint256 rawAmount = Helper._normalize(normalizedAmount, 18, tokenDecimals);
-        if(tokenDecimals<18){
-            normalizedAmount = Helper._normalize(rawAmount, tokenDecimals, 18);
+        uint256 rawAmount = Helper._normalize(normalizedAmount, 8, tokenDecimals);
+        if(tokenDecimals<8){
+            normalizedAmount = Helper._normalize(rawAmount, tokenDecimals, 8);
         }
         require(rawAmount > 0, "Withdraw amount too small");
         require(normalizedAmount != 0, "amount=0");
@@ -131,9 +126,9 @@ abstract contract Balances is GeniDexBase {
         emit Withdrawal(msg.sender, tokenAddress, normalizedAmount);
     }
 
-    function getTokenBalance(address tokenAddress) external view returns (uint256){
-        uint80 userID = userIDs[msg.sender];
-        return balances[userID][tokenAddress];
+    function getBalance(address account, address tokenOrEtherAddress) external view returns (uint256){
+        uint80 userID = userIDs[account];
+        return balances[userID][tokenOrEtherAddress];
     }
 
     function getEthBalance() external view returns (uint256){

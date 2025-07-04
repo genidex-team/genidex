@@ -29,6 +29,7 @@ abstract contract Storage {
 
     struct OutputOrder {
         uint256 id;
+        address trader;
         uint80 userID;
         uint80 price;
         uint80 quantity;
@@ -49,11 +50,13 @@ abstract contract Storage {
     mapping(uint256 => Order[]) public buyOrders; // marketID => Order[]
     mapping(uint256 => Order[]) public sellOrders; // marketID => Order[]
     mapping(address => Token) public tokens; // tokenAddress => Token
+    mapping(address => bool) public isTokenListed;
     // Key: bytes32 hash = keccak256(abi.encodePacked(baseAddress, quoteAddress));
     mapping(bytes32 => uint256) public marketIDs; // hash => marketCounter
     mapping(uint80 userID => mapping(address token => uint256 balance)) public balances; // balances[userID][token] => balance
     mapping(uint80 userID => uint256) public userPoints;
-    mapping(address => uint80) public userIDs;
+    mapping(address => uint80) public userIDs; // userIDs[userAddress] = userID
+    mapping(uint80 => address) public userAddresses; // userAddresses[userID] = userAddress
     mapping(address => address) public userReferrer; // referee => referrer
     mapping(address => address[]) public refereesOf; // referrer => [referees]
 

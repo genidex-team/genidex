@@ -3,6 +3,7 @@
     "solidity.packageDefaultDependenciesContractsDirectory": "",
     "solidity.packageDefaultDependenciesDirectory": "node_modules",
     "cSpell.words": [
+        "chainid",
         "gasleft",
         "genidex",
         "Initializable",

@@ -145,7 +145,7 @@ class BuyOrdersHelper {
         }
         const tx = await genidexSDK.sellOrders.placeSellOrder({signer, marketId, normPrice, normQuantity});
         await fn.printGasUsed(tx, 'placeSellOrder');
-        const receipt = await genidexSDK.tx.wait(tx.hash);
+        genidexSDK.tx.wait(tx.hash);
     }
 
     async cancelBuyOrder(account, marketId, orderIndex) {

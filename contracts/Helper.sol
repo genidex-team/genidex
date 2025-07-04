@@ -25,6 +25,12 @@ library Helper {
     error MetadataFetchFailed(address token);
     error TokenNotListed(address token);
     error UserNotFound(address user);
+    error InvalidTokenAddress();
+    error TokenAlreadyListed(address token);
+    error SymbolFetchFailed();
+    error DecimalsFetchFailed();
+    error ManualSymbolRequired();
+    error ManualDecimalsRequired();
 
 
     function min(uint80 a, uint80 b) internal pure returns (uint80) {

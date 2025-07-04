@@ -14,7 +14,8 @@ abstract contract SellOrders is GeniDexBase {
         uint256 quantity,
         uint256 remainingQuantity,
         uint256 lastPrice,
-        address referrer
+        address referrer,
+        uint80 userID
     );
 
     struct PlaceSellOrderVariable{
@@ -105,7 +106,7 @@ abstract contract SellOrders is GeniDexBase {
             }
         }
         emit OnPlaceSellOrder(marketId, msg.sender, orderIndex,
-            price, quantity, sellOrder.quantity, lv.lastPrice, referrer);
+            price, quantity, sellOrder.quantity, lv.lastPrice, referrer, lv.userID);
     }
 
     function matchSellOrder(
@@ -136,9 +137,10 @@ abstract contract SellOrders is GeniDexBase {
             if (buyOrderPrice >= sellOrder.price && buyOrderQuantity>0) {
 
                 uint80 tradeQuantity = Helper.min(buyOrderQuantity, sellOrder.quantity);
+                // uint80 tradeQuantity = buyOrderQuantity <= sellOrder.quantity ? buyOrderQuantity : sellOrder.quantity;
                 uint256 tradeValue = uint256(buyOrderPrice) * tradeQuantity / WAD;
 
-                buyOrder.quantity -= tradeQuantity;
+                buyOrder.quantity = buyOrderQuantity - tradeQuantity;
                 sellOrder.quantity -= tradeQuantity;
 
                 // totalTradeQuantity += tradeQuantity;
@@ -195,7 +197,7 @@ abstract contract SellOrders is GeniDexBase {
         if (userID != orderUserID) {
             revert Helper.Unauthorized(userID, orderUserID);
         }
-        uint256 quantity = order.quantity;
+        uint80 quantity = order.quantity;
         if (quantity == 0) {
             revert Helper.OrderAlreadyCanceled(orderIndex);
         }
@@ -210,7 +212,7 @@ abstract contract SellOrders is GeniDexBase {
         return sellOrders[marketID].length;
     }
 
-    function getSellOrders(
+    /*function getSellOrders(
         uint256 marketId,
         uint256 maxPrice,
         uint256 limit
@@ -245,6 +247,6 @@ abstract contract SellOrders is GeniDexBase {
             }
         }
         return rsSellOrders;
-    }
+    }*/
 
 }

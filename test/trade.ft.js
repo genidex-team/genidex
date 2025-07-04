@@ -111,23 +111,27 @@ async function main() {
 }
 
 async function testPlaceSellOrder(){
-    let price = utils.parseUnits("1");
-    let quantity = utils.parseUnits("10");
+    let price = utils.parseBaseUnit("1");
+    let quantity = utils.parseBaseUnit("10");
+    // await buy(price, quantity);
+    // quantity = utils.parseBaseUnit("200000000");
+    // await sell(price, quantity);
+    // return;
 
-    // let price = ethers.parseUnits("1", 8);
-    // let quantity = ethers.parseUnits("1", 8);
     let buyOrders = [];
-    for(var i=0; i<400; i++){
+    for(var i=0; i<10; i++){
         console.log(i);
-        await buy(price, quantity);
+        // await buy(price, quantity);
+        await sell(price, quantity);
     }
     // await Promise.all(buyOrders);
     // console.log('sellOrders', await ordersHelper.getAscFormatSellOrders(marketId) );
 
     // await sell(3, 1);
     // await gQuote1Balance();
-    quantity = utils.parseUnits('4000');
-    await sell(price, quantity);
+    quantity = utils.parseBaseUnit('100');
+    // await sell(price, quantity);
+    await buy(price, quantity);
 
     // match 0, old order index: 13.07 USD v
     // match 5, no order index: 18.03 USD v

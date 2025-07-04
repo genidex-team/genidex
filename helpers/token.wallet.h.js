@@ -7,6 +7,7 @@ const fn = require('./functions');
 const erc20Abi = require('../data/erc20.abi.json');
 const data = require('./data');
 const { genidexSDK } = require('../config/config');
+const {utils} = require('genidex-sdk')
 
 const provider = ethers.provider;
 
@@ -60,7 +61,7 @@ class TokenWalletHelper{
             decimals = 18;
             symbol = 'ETH';
             balance = await ethers.provider.getBalance(account.address);
-            var normAmount = ethers.parseEther(strAmount);
+            var normAmount = utils.parseBaseUnit(strAmount);
             transaction = await geniDexContract.connect(account).depositEth({value: normAmount});
         }else{
             let token = new ethers.Contract(tokenAddress, erc20Abi, account);
@@ -70,8 +71,7 @@ class TokenWalletHelper{
             transaction = await genidexSDK.balances.depositToken({
                 signer: account,
                 tokenAddress: tokenAddress,
-                normAmount: ethers.parseEther(strAmount),
-                normApproveAmount: ethers.parseEther(strAmount)
+                normAmount: utils.parseBaseUnit(strAmount)
             })
         }
         fn.printGasUsed(transaction, `Deposit ${strAmount} ${symbol}` );
@@ -108,7 +108,8 @@ class TokenWalletHelper{
             // decimals = await token.decimals();
             symbol = await token.symbol();
         }
-        const balance = await geniDexContract.connect(account).getTokenBalance(tokenAddress);
+        // const balance = await geniDexContract.connect(account).getTokenBalance(tokenAddress);
+        const balance = await genidexSDK.balances.getBalance(account.address, tokenAddress)
         
         console.log('getGeniDexBalance', message, symbol, parseFloat(ethers.formatEther(balance)));
         if(format==true){

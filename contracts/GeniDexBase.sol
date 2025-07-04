@@ -33,6 +33,20 @@ abstract contract GeniDexBase is
     function __Storage_init() internal onlyInitializing {
         marketCounter = 0;
         totalUnclaimedPoints = 0;
+        // feeRecipient
+        generateUserID(0x90F79bf6EB2c4f870365E785982E1f101E93b906);
+    }
+
+    function generateUserID(address userAddress) internal returns(uint80){
+        uint80 userID = userIDs[userAddress];
+        if(userID>0){
+            return userID;
+        }else{
+            userID = ++userCounter;
+            userAddresses[userID] = userAddress;
+            userIDs[userAddress] = userID;
+            return userID;
+        }
     }
 
     function _fee(uint256 amount) internal pure returns (uint256 result) {
@@ -73,7 +87,7 @@ abstract contract GeniDexBase is
      * @return symbol The token's symbol.
      * @return decimals The token's decimals.
     */
-    function getAndSetTokenMeta(address tokenAddress) public returns (string memory symbol, uint8 decimals) {
+    function getAndSetTokenMeta(address tokenAddress) internal returns (string memory symbol, uint8 decimals) {
         // If already cached, return from storage
         Token storage info = tokens[tokenAddress];
         if (bytes(info.symbol).length > 0) {

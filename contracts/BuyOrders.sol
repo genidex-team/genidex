@@ -16,7 +16,8 @@ abstract contract BuyOrders is GeniDexBase {
         uint256 quantity,
         uint256 remainingQuantity,
         uint256 lastPrice,
-        address referrer
+        address referrer,
+        uint80 userID
     );
 
     struct PlaceBuyOrderVariable {
@@ -63,6 +64,7 @@ abstract contract BuyOrders is GeniDexBase {
             remainingValue: 0,
             userID: userIDs[msg.sender]
         });
+
         if(lv.userID<=0){
             revert Helper.UserNotFound(msg.sender);
         }
@@ -74,22 +76,21 @@ abstract contract BuyOrders is GeniDexBase {
         });
 
         //set referrer
-        if (userReferrer[msg.sender] == address(0)
-            && referrer != address(0)
-            && referrer != msg.sender)
-        {
+        if (userReferrer[msg.sender] == address(0) && referrer != address(0) && referrer != msg.sender) {
             userReferrer[msg.sender] = referrer;
             refereesOf[referrer].push(msg.sender);
         }
+
         lv.total = uint256(price) * quantity / WAD;
         if (lv.total < tokens[lv.quoteAddress].minOrderAmount) {
             revert Helper.TotalTooSmall(lv.total, tokens[lv.quoteAddress].minOrderAmount);
         }
 
         mapping(address => uint256) storage buyerBalances = balances[lv.userID];
-        if(buyerBalances[lv.quoteAddress] < lv.total + _fee(lv.total)){
+        uint256 buyerQuoteBalance = buyerBalances[lv.quoteAddress];
+        if(buyerQuoteBalance < lv.total + _fee(lv.total)){
             revert Helper.InsufficientBalance({
-                available: buyerBalances[lv.quoteAddress],
+                available: buyerQuoteBalance,
                 required: lv.total + _fee(lv.total)
             });
         }
@@ -98,18 +99,17 @@ abstract contract BuyOrders is GeniDexBase {
         lv.remainingValue = uint256(price) * buyOrder.quantity / WAD;
         lv.totalValue = lv.totalTradeValue + lv.remainingValue;
 
-        //debit the buyOrder's balance
-        buyerBalances[lv.quoteAddress] -= lv.totalValue + _fee(lv.totalValue);
+        // debit the buyOrder's balance
+        buyerBalances[lv.quoteAddress] = buyerQuoteBalance - lv.totalValue - _fee(lv.totalValue);
 
-        //credit the feeReceiver's balance
+        // credit the feeReceiver's balance
         // seller fee + buyer fee = 2*_fee(lv.totalTradeValue)
-        balances[lv.userID][lv.quoteAddress] += 2 * _fee(lv.totalTradeValue);
+        balances[1][lv.quoteAddress] += 2 * _fee(lv.totalTradeValue);
 
-        //  Order[] storage marketSellOrders = sellOrders[marketId];
         Order[] storage marketBuyOrders = buyOrders[marketId];
 
         uint256 orderIndex = 0;
-        if(lv.remainingValue>0){
+        if(buyOrder.quantity>0){
             if(filledOrderId < marketBuyOrders.length && marketBuyOrders[filledOrderId].quantity<=0){
                 marketBuyOrders[filledOrderId] = buyOrder;
                 orderIndex = filledOrderId;
@@ -120,7 +120,7 @@ abstract contract BuyOrders is GeniDexBase {
         }
 
         emit OnPlaceBuyOrder(marketId, msg.sender, orderIndex,
-            price, quantity, buyOrder.quantity, lv.lastPrice, referrer);
+            price, quantity, buyOrder.quantity, lv.lastPrice, referrer, lv.userID);
 
     }
 
@@ -151,13 +151,14 @@ abstract contract BuyOrders is GeniDexBase {
             if (sellOrderPrice <= buyOrder.price && sellOrderQuantity>0) {
 
                 uint80 tradeQuantity = Helper.min(buyOrder.quantity, sellOrderQuantity);
-                uint256 tradeValue = sellOrderPrice * tradeQuantity / WAD;
+                // uint80 tradeQuantity = sellOrderQuantity <=  buyOrder.quantity ? sellOrderQuantity : buyOrder.quantity;
+                uint256 tradeValue = uint256(sellOrderPrice) * tradeQuantity / WAD;
 
                 // storage
-                // sub tradeQuantity
-                sellOrder.quantity -= tradeQuantity;
-                buyOrder.quantity -= tradeQuantity;
+                sellOrder.quantity = sellOrderQuantity - tradeQuantity;
+
                 // memory
+                buyOrder.quantity -= tradeQuantity;
                 totalTradeQuantity += tradeQuantity;
                 totalTradeValue += tradeValue;
 
@@ -267,7 +268,7 @@ abstract contract BuyOrders is GeniDexBase {
         uint256 marketID,
         uint256 offset,
         uint256 limit
-    ) external view returns (Order[] memory orders) {
+    ) external view returns (OutputOrder[] memory orders) {
         Order[] storage list;
         if(orderType==OrderType.Buy){
             list = buyOrders[marketID];
@@ -278,7 +279,7 @@ abstract contract BuyOrders is GeniDexBase {
 
         if (offset >= len) {
             // Offset exceeds array length → return empty array
-            return new Order[](0);
+            return new OutputOrder[](0);
         }
 
         // Calculate the end index without exceeding the array length
@@ -288,11 +289,19 @@ abstract contract BuyOrders is GeniDexBase {
         }
 
         uint256 size = end - offset;
-        orders = new Order[](size);
+        orders = new OutputOrder[](size);
 
         // Copy each element from storage into memory
         for (uint256 i; i < size; ++i) {
-            orders[i] = list[offset + i];
+            Order storage order = list[offset + i];
+            uint80 userID = order.userID;
+            orders[i] = OutputOrder({
+                id: offset + i,
+                trader: userAddresses[userID],
+                userID: userID,
+                price: order.price,
+                quantity: order.quantity
+            });
         }
     }
 
@@ -301,7 +310,7 @@ abstract contract BuyOrders is GeniDexBase {
         return buyOrders[marketID].length;
     }
 
-    function getBuyOrders(
+    /*function getBuyOrders(
         uint256 marketId,
         uint256 minPrice,
         uint256 limit
@@ -336,6 +345,6 @@ abstract contract BuyOrders is GeniDexBase {
             }
         }
         return rsBuyOrders;
-    }
+    }*/
 
 }
