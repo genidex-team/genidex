@@ -8,20 +8,19 @@ import "./GeniDexBase.sol";
 abstract contract Markets is GeniDexBase {
 
     function addMarket(
-        address baseAddress, address quoteAddress, uint256 minOrderAmount
+        address baseAddress, address quoteAddress
     ) external onlyOwner {
         string memory baseSymbol;
         string memory quoteSymbol;
         uint8 baseDecimals;
         uint8 quoteDecimals;
-        (baseSymbol, baseDecimals) = getAndSetTokenMeta(baseAddress);
-        (quoteSymbol, quoteDecimals) = getAndSetTokenMeta(quoteAddress);
-        if(minOrderAmount>0 && tokens[quoteAddress].minOrderAmount==0){
-            tokens[quoteAddress].minOrderAmount = minOrderAmount;
-        }
+        (baseSymbol, baseDecimals) = _getTokenMeta(baseAddress);
+        (quoteSymbol, quoteDecimals) = _getTokenMeta(quoteAddress);
 
         bytes32 hash = generateMarketHash(baseAddress, quoteAddress);
-        require(marketIDs[hash]==0, 'Market already exists.');
+        if (marketIDs[hash] != 0) {
+            revert Helper.MarketAlreadyExists(baseAddress, quoteAddress);
+        }
         marketCounter++;
 
         markets[marketCounter] = Market({

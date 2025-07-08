@@ -11,14 +11,14 @@ abstract contract Storage {
     }
 
     struct Market {
-        string symbol;
-        uint256 id;
-        uint256 price;
-        uint256 lastUpdatePrice;
+        uint80 price;
+        uint80 lastUpdatePrice;
+        bool isRewardable;
         address baseAddress;
         address quoteAddress; //ERC20 token address for the quote asset (e.g., stablecoin)
         address creator;
-        bool isRewardable;
+        uint256 id;
+        string symbol;
     }
 
     struct Order {
@@ -36,15 +36,16 @@ abstract contract Storage {
     }
 
     struct Token {
-        string symbol;
-        uint256 usdMarketID;
-        uint256 minOrderAmount;
-        uint256 minTransferAmount;
+        uint80 minOrderAmount;
+        uint80 minTransferAmount;
+        uint80 usdMarketID;
         uint8 decimals;
         bool isUSD;
+        string symbol;
     }
 
-    uint256 public constant WAD = 10 ** 8;
+    uint256 public constant BASE_UNIT = 10 ** 8;
+    uint80 internal constant FEE_USER_ID = 1;
 
     mapping(uint256 => Market) public markets; // marketCounter => Market
     mapping(uint256 => Order[]) public buyOrders; // marketID => Order[]
@@ -64,9 +65,6 @@ abstract contract Storage {
     uint80 public userCounter;
     uint256 public totalUnclaimedPoints;
     bytes32 public referralRoot;
-
-    address public constant feeReceiver = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
     address public geniRewarder;
-
 
 }

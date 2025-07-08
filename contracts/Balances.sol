@@ -18,10 +18,10 @@ abstract contract Balances is GeniDexBase {
         uint256 minTransferAmount = tokens[address(0)].minTransferAmount;
         uint256 rawAmount = msg.value;
         uint256 normAmount = Helper._normalize(rawAmount, 18, 8);
-        if(normAmount <= minTransferAmount){
+        if(normAmount < minTransferAmount){
             revert Helper.AmountTooSmall(normAmount, minTransferAmount);
         }
-        uint80 userID = generateUserID(msg.sender);
+        uint80 userID = _generateUserID(msg.sender);
         balances[userID][address(0)] += normAmount;
         emit Deposit(msg.sender, address(0), normAmount);
     }
@@ -31,7 +31,7 @@ abstract contract Balances is GeniDexBase {
     ) external nonReentrant whenNotPaused
     {
         uint256 minTransferAmount = tokens[address(0)].minTransferAmount;
-        if(amount <= minTransferAmount){
+        if(amount < minTransferAmount){
             revert Helper.AmountTooSmall(amount, minTransferAmount);
         }
         uint80 userID = userIDs[msg.sender];
@@ -46,12 +46,13 @@ abstract contract Balances is GeniDexBase {
         emit Withdrawal(msg.sender, address(0), amount);
 
         uint256 rawAmount = Helper._normalize(amount, 8, 18);
-        bool success = payable(msg.sender).send(rawAmount);
+        // bool success = payable(msg.sender).send(rawAmount);
+        (bool success, ) = payable(msg.sender).call{value: rawAmount}("");
         if(!success){
             revert Helper.TransferFailed({
                 from: address(this),
                 to: msg.sender,
-                amount: amount
+                amount: rawAmount
             });
         }
     }
@@ -72,20 +73,25 @@ abstract contract Balances is GeniDexBase {
         if(tokenDecimals<8){
             normalizedAmount = Helper._normalize(rawAmount, tokenDecimals, 8);
         }
-        if(normalizedAmount < 1 || rawAmount < 1){
+        if(rawAmount < 1){
             revert Helper.AmountTooSmall(normalizedAmount, 1);
+        }
+        uint80 minTransferAmount = tokens[tokenAddress].minTransferAmount;
+        if(normalizedAmount < minTransferAmount){
+            revert Helper.AmountTooSmall(normalizedAmount, minTransferAmount);
         }
 
         IERC20 token = IERC20(tokenAddress);
         uint256 pre = token.balanceOf(address(this));
         token.safeTransferFrom(msg.sender, address(this), rawAmount);
         uint256 received = token.balanceOf(address(this)) - pre;
-        // require(received == rawAmount, "transfer mismatch");
-        require(received > 0, "no tokens received");
+        if (received == 0) {
+            revert Helper.NoTokensReceived();
+        }
         if(received != rawAmount){
             normalizedAmount = Helper._normalize(received, tokenDecimals, 8);
         }
-        uint80 userID = generateUserID(msg.sender);
+        uint80 userID = _generateUserID(msg.sender);
         balances[userID][tokenAddress] += normalizedAmount;
         emit Deposit(msg.sender, tokenAddress, normalizedAmount);
     }
@@ -99,7 +105,6 @@ abstract contract Balances is GeniDexBase {
             revert Helper.UserNotFound(msg.sender);
         }
         uint256 userBal = balances[userID][tokenAddress];
-        // require(userBal >= normalizedAmount, "insufficient balance");
         if(normalizedAmount > userBal){
             revert Helper.InsufficientBalance(userBal, normalizedAmount);
         }
@@ -112,8 +117,14 @@ abstract contract Balances is GeniDexBase {
         if(tokenDecimals<8){
             normalizedAmount = Helper._normalize(rawAmount, tokenDecimals, 8);
         }
-        require(rawAmount > 0, "Withdraw amount too small");
-        require(normalizedAmount != 0, "amount=0");
+
+        if(rawAmount < 1){
+            revert Helper.AmountTooSmall(normalizedAmount, 1);
+        }
+        uint80 minTransferAmount = tokens[tokenAddress].minTransferAmount;
+        if(normalizedAmount < minTransferAmount){
+            revert Helper.AmountTooSmall(normalizedAmount, minTransferAmount);
+        }
 
         balances[userID][tokenAddress] = userBal - normalizedAmount;
 
@@ -121,7 +132,9 @@ abstract contract Balances is GeniDexBase {
         uint256 pre = token.balanceOf(address(this));
         token.safeTransfer(msg.sender, rawAmount);
         uint256 post = token.balanceOf(address(this));
-        require(pre - post <= rawAmount, "transfer mismatch");
+        if (pre - post > rawAmount) {
+            revert Helper.TransferMismatch(pre - post, rawAmount);
+        }
 
         emit Withdrawal(msg.sender, tokenAddress, normalizedAmount);
     }

@@ -11,21 +11,24 @@ abstract contract Tokens is GeniDexBase {
 
     function listToken(
         address tokenAddress,
-        uint256 usdMarketID,
-        uint256 minOrderAmount,
-        uint256 minTransferAmount,
+        uint80 minTransferAmount,
+        uint80 minOrderAmount,
+        uint80 usdMarketID,
         bool isUSD,
         bool autoDetect,
         string calldata manualSymbol,
         uint8 manualDecimals
     ) external onlyOwner {
         // if (tokenAddress == address(0)) revert Helper.InvalidTokenAddress();
-        if (isTokenListed[tokenAddress]) revert Helper.TokenAlreadyListed(tokenAddress);
+        // if (isTokenListed[tokenAddress]) revert Helper.TokenAlreadyListed(tokenAddress);
 
         string memory symbol;
         uint8 decimals;
 
-        if (autoDetect) {
+        if(tokenAddress == address(0)){
+            symbol = 'ETH';
+            decimals = 18;
+        }else if (autoDetect) {
             try IERC20Metadata(tokenAddress).symbol() returns (string memory sym) {
                 symbol = sym;
             } catch {
@@ -37,10 +40,6 @@ abstract contract Tokens is GeniDexBase {
             } catch {
                 revert Helper.DecimalsFetchFailed();
             }
-        }
-        else if(tokenAddress == address(0)){
-            symbol = 'ETH';
-            decimals = 18;
         } else {
             if (bytes(manualSymbol).length == 0) revert Helper.ManualSymbolRequired();
             if (manualDecimals == 0) revert Helper.ManualDecimalsRequired();
@@ -63,29 +62,27 @@ abstract contract Tokens is GeniDexBase {
     }
 
     function updateTokenIsUSD(address tokenAddress, bool isUSD) external onlyOwner(){
-        ERC20 token = ERC20(tokenAddress);
         tokens[tokenAddress].isUSD = isUSD;
-        tokens[tokenAddress].decimals = token.decimals();
     }
 
-    function updateUSDMarketID(address tokenAddress, uint256 marketID) external onlyOwner{
+    function updateUSDMarketID(address tokenAddress, uint80 marketID) external onlyOwner{
         tokens[tokenAddress].usdMarketID = marketID;
     }
 
-    function updateMinOrderAmount(address tokenAddress, uint256 minOrderAmount) external onlyOwner{
+    function updateMinOrderAmount(address tokenAddress, uint80 minOrderAmount) external onlyOwner{
         tokens[tokenAddress].minOrderAmount = minOrderAmount;
     }
 
-    function updateMinTransferAmount(address tokenAddress, uint256 minTransferAmount) external onlyOwner{
+    function updateMinTransferAmount(address tokenAddress, uint80 minTransferAmount) external onlyOwner{
         tokens[tokenAddress].minTransferAmount = minTransferAmount;
     }
 
     struct TokenInfo {
         address tokenAddress;
         string symbol;
-        uint256 usdMarketID;
-        uint256 minOrderAmount;
-        uint256 minTransferAmount;
+        uint80 usdMarketID;
+        uint80 minOrderAmount;
+        uint80 minTransferAmount;
         uint8 decimals;
         bool isUSD;
     }

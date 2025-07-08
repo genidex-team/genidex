@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 library Helper {
 
+    error MarketAlreadyExists(address baseToken, address quoteToken);
     error InsufficientBalance(uint256 available, uint256 required);
     error TotalTooSmall(uint256 total, uint256 minimumRequired);
     error AmountTooSmall(uint256 amount, uint256 minAmount);
@@ -22,7 +23,6 @@ library Helper {
     error ReferralRootNotSet();
     error InvalidProof();
     error InvalidMarketId(uint256 marketId, uint256 marketCounter);
-    error MetadataFetchFailed(address token);
     error TokenNotListed(address token);
     error UserNotFound(address user);
     error InvalidTokenAddress();
@@ -31,59 +31,21 @@ library Helper {
     error DecimalsFetchFailed();
     error ManualSymbolRequired();
     error ManualDecimalsRequired();
+    error NoTokensReceived();
+    error TransferMismatch(uint256 actual, uint256 expected);
+    error OnlyRewarderAllowed(address caller);
+    error InvalidAddress();
+    error InsufficientPoints(uint256 available, uint256 required);
+    error ReferrerAlreadySet(address user);
+    error SelfReferralNotAllowed(address user);
+    error DecimalsExceedLimit(uint8 decimals);
+    error NormalizationOverflow(uint256 amount, uint256 factor);
+
+    error AddressAlreadyLinked();
 
 
-    function min(uint80 a, uint80 b) internal pure returns (uint80) {
+    function _min(uint80 a, uint80 b) internal pure returns (uint80) {
         return a < b ? a : b;
-    }
-
-    function add(uint256 a, uint256 b) internal pure returns (uint256 c) {
-        unchecked {
-            c = a + b;
-            require(c >= a, "add: overflow");
-        }
-    }
-
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        unchecked {
-            require(a >= b, "sub: overflow");
-            return a - b;
-        }
-    }
-
-    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        unchecked {
-            // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
-            // benefit is lost if 'b' is also tested.
-            // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
-            if (a == 0) return 0;
-            uint256 c = a * b;
-            require(c / a == b, "mul: overflow");
-            return c;
-        }
-    }
-
-    function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        unchecked {
-            require(b != 0, "div: division by zero");
-            return a / b;
-        }
-    }
-
-    function addAssembly(
-        uint256 a,
-        uint256 b
-    ) internal pure returns (uint256 c) {
-        // c = a + b;
-        assembly {
-            c := add(a, b)
-            if lt(c, a) {
-                // mstore(0x00, message)
-                revert(0x00, 0x20)
-            }
-            mstore(0x00, c)
-            // return(0x00, 0x32)
-        }
     }
 
     function _normalize(
@@ -91,48 +53,31 @@ library Helper {
         uint8 decimalsFrom,
         uint8 decimalsTo
     ) internal pure returns (uint256 normalized) {
-        require(
-            decimalsFrom <= 36 && decimalsTo <= 36,
-            "normalize: decimals>36"
-        );
+        if (decimalsFrom > 36) {
+            revert DecimalsExceedLimit(decimalsFrom);
+        }
+        if (decimalsTo > 36) {
+            revert DecimalsExceedLimit(decimalsTo);
+        }
 
         if (decimalsFrom == decimalsTo) {
             return amount;
         }
-
-        // ---------------------------------------------------------------------
-        // Upscale: e.g. 6  -> 18  (multiply)
-        // ---------------------------------------------------------------------
-        if (decimalsFrom < decimalsTo) {
+        else if (decimalsFrom < decimalsTo) {
+            // Upscale: e.g. 6  -> 18  (multiply)
             uint256 factor = 10 ** (decimalsTo - decimalsFrom);
             unchecked {
                 normalized = amount * factor;
                 // overflow-safety: reverse-check (cheaper than SafeMath)
-                require(normalized / factor == amount, "normalize: overflow");
+                if (normalized / factor != amount) {
+                    revert NormalizationOverflow(amount, factor);
+                }
             }
             return normalized;
-        }
-
-        // ---------------------------------------------------------------------
-        // Downscale: e.g. 18 -> 6  (divide)  — avoid precision loss
-        // ---------------------------------------------------------------------
-        uint256 divisor = 10 ** (decimalsFrom - decimalsTo);
-        return amount / divisor;
-    }
-
-    function getSymbol(address token) internal view returns (string memory) {
-        try IERC20Metadata(token).symbol() returns (string memory _symbol) {
-            return _symbol;
-        } catch {
-            revert MetadataFetchFailed(token);
-        }
-    }
-
-    function getDecimals(address token) internal view returns (uint8) {
-        try IERC20Metadata(token).decimals() returns (uint8 _decimals) {
-            return _decimals;
-        } catch {
-            revert MetadataFetchFailed(token);
+        }else{
+            // Downscale: e.g. 18 -> 6  (divide)
+            uint256 divisor = 10 ** (decimalsFrom - decimalsTo);
+            return amount / divisor;
         }
     }
 }

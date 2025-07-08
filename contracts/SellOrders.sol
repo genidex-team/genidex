@@ -21,7 +21,7 @@ abstract contract SellOrders is GeniDexBase {
     struct PlaceSellOrderVariable{
         address baseAddress;
         address quoteAddress;
-        uint256 lastPrice;
+        uint80 lastPrice;
         uint256 total;
         uint80 userID;
     }
@@ -69,7 +69,7 @@ abstract contract SellOrders is GeniDexBase {
             refereesOf[referrer].push(msg.sender);
         }
 
-        lv.total = uint256(price) * quantity / WAD;
+        lv.total = uint256(price) * quantity / BASE_UNIT;
         if (lv.total < tokens[lv.quoteAddress].minOrderAmount) {
             revert Helper.TotalTooSmall(lv.total, tokens[lv.quoteAddress].minOrderAmount);
         }
@@ -94,7 +94,7 @@ abstract contract SellOrders is GeniDexBase {
         lv.lastPrice = matchSellOrder(marketId, market, sellOrder, buyOrderIDs, lv);
         sellerBalances[lv.baseAddress] -= quantity;
 
-        // lv.remainingValue = price * sellOrder.quantity / WAD;
+        // lv.remainingValue = price * sellOrder.quantity / BASE_UNIT;
         uint256 orderIndex = 0;
         if(sellOrder.quantity>0){
             if(filledOrderId < marketSellOrders.length && marketSellOrders[filledOrderId].quantity<=0){
@@ -115,7 +115,7 @@ abstract contract SellOrders is GeniDexBase {
         Order memory sellOrder,
         uint256[] calldata buyOrderIDs,
         PlaceSellOrderVariable memory lv
-    ) private returns(uint256 lastPrice)
+    ) private returns(uint80 lastPrice)
     {
 
         lastPrice = 0;
@@ -136,9 +136,9 @@ abstract contract SellOrders is GeniDexBase {
             uint80 buyOrderQuantity = buyOrder.quantity;
             if (buyOrderPrice >= sellOrder.price && buyOrderQuantity>0) {
 
-                uint80 tradeQuantity = Helper.min(buyOrderQuantity, sellOrder.quantity);
+                uint80 tradeQuantity = Helper._min(buyOrderQuantity, sellOrder.quantity);
                 // uint80 tradeQuantity = buyOrderQuantity <= sellOrder.quantity ? buyOrderQuantity : sellOrder.quantity;
-                uint256 tradeValue = uint256(buyOrderPrice) * tradeQuantity / WAD;
+                uint256 tradeValue = uint256(buyOrderPrice) * tradeQuantity / BASE_UNIT;
 
                 buyOrder.quantity = buyOrderQuantity - tradeQuantity;
                 sellOrder.quantity -= tradeQuantity;
@@ -156,7 +156,7 @@ abstract contract SellOrders is GeniDexBase {
         if(totalTradeValue>0){
             uint256 totalFee = _fee(totalTradeValue);
             balances[sellOrder.userID][lv.quoteAddress] += (totalTradeValue - totalFee);
-            balances[1][lv.quoteAddress] += 2*totalFee;
+            balances[FEE_USER_ID][lv.quoteAddress] += 2*totalFee;
 
             //update geniPoints
             if(market.isRewardable){
@@ -166,7 +166,7 @@ abstract contract SellOrders is GeniDexBase {
             // update market.price
             if(block.timestamp - market.lastUpdatePrice > 300){
                 market.price = lastPrice;
-                market.lastUpdatePrice = block.timestamp;
+                market.lastUpdatePrice = uint80(block.timestamp);
             }
         }
         return lastPrice;

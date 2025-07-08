@@ -8,12 +8,16 @@ abstract contract Points is GeniDexBase {
     event GeniRewarderUpdated(address indexed previous, address indexed newRewarder);
 
     modifier onlyRewarder() {
-        require(msg.sender == geniRewarder, "Only RewardDistributor can call");
+        if (msg.sender != geniRewarder) {
+            revert Helper.OnlyRewarderAllowed(msg.sender);
+        }
         _;
     }
 
     function setGeniRewarder(address _rewarder) external onlyOwner {
-        require(_rewarder != address(0), "rewarder = 0");
+        if (_rewarder == address(0)) {
+            revert Helper.InvalidAddress();
+        }
         emit GeniRewarderUpdated(geniRewarder, _rewarder);
         geniRewarder = _rewarder;
     }
@@ -29,7 +33,11 @@ abstract contract Points is GeniDexBase {
 
     function deductUserPoints(address userAddress, uint256 pointsToDeduct) external onlyRewarder {
         uint80 userID = userIDs[userAddress];
-        require(userPoints[userID] >= pointsToDeduct, "Not enough points");
+
+        uint256 available = userPoints[userID];
+        if (available < pointsToDeduct) {
+            revert Helper.InsufficientPoints(available, pointsToDeduct);
+        }
         userPoints[userID] -= pointsToDeduct;
         totalUnclaimedPoints -= pointsToDeduct;
     }

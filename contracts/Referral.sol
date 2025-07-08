@@ -11,9 +11,15 @@ abstract contract Referral is GeniDexBase {
     }
 
     function setReferrer(address _referrer) external {
-        require(userReferrer[msg.sender] == address(0), "Referrer already set");
-        require(_referrer != address(0), "Invalid referrer address");
-        require(_referrer != msg.sender, "Cannot refer yourself");
+        if (userReferrer[msg.sender] != address(0)) {
+            revert Helper.ReferrerAlreadySet(userReferrer[msg.sender]);
+        }
+        if (_referrer == address(0)) {
+            revert Helper.InvalidAddress();
+        }
+        if (_referrer == msg.sender) {
+            revert Helper.SelfReferralNotAllowed(msg.sender);
+        }
         userReferrer[msg.sender] = _referrer;
         refereesOf[_referrer].push(msg.sender);
     }
