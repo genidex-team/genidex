@@ -18,26 +18,27 @@ abstract contract GeniDexBase is
     ReentrancyGuardTransientUpgradeable,
     Storage
 {
-    using Helper for address;
+    event FeeReceiverUpdated(address indexed oldAddress, address indexed newAddress);
+    // using Helper for address;
 
     function __GeniDexBase_init(address initialOwner) internal onlyInitializing {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
         __Pausable_init();
         __ReentrancyGuardTransient_init();
-        __Storage_init();
+        __Storage_init(initialOwner);
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
-    function __Storage_init() internal onlyInitializing {
+    function __Storage_init(address initialOwner) internal onlyInitializing {
         marketCounter = 0;
         totalUnclaimedPoints = 0;
-        // feeRecipient
-        generateUserID(0x90F79bf6EB2c4f870365E785982E1f101E93b906);
+        // feeReceiver
+        _generateUserID(initialOwner);
     }
 
-    function generateUserID(address userAddress) internal returns(uint80){
+    function _generateUserID(address userAddress) internal returns(uint80){
         uint80 userID = userIDs[userAddress];
         if(userID>0){
             return userID;
@@ -49,8 +50,22 @@ abstract contract GeniDexBase is
         }
     }
 
+    function updateFeeReceiver(address newAddr) external onlyOwner {
+        if (newAddr == address(0)) revert Helper.InvalidAddress();
+        if (userIDs[newAddr] != 0) revert Helper.AddressAlreadyLinked();
+
+        address oldAddr = userAddresses[FEE_USER_ID];
+
+        userAddresses[FEE_USER_ID] = newAddr;
+        userIDs[newAddr]           = FEE_USER_ID;
+
+        delete userIDs[oldAddr];
+
+        emit FeeReceiverUpdated(oldAddr, newAddr);
+    }
+
     function _fee(uint256 amount) internal pure returns (uint256 result) {
-        // 0.1% = 0.001 = 1/1000
+        // amount*0.1% = amount*0.001 = amount/1000
         result = amount / 1000;
     }
 
@@ -65,7 +80,7 @@ abstract contract GeniDexBase is
             points = totalTradeValue;
         }else if(quoteToken.usdMarketID != 0){
             Market storage usdMarket = markets[quoteToken.usdMarketID];
-            points = usdMarket.price * totalTradeValue / WAD;
+            points = usdMarket.price * totalTradeValue / BASE_UNIT;
         }
         if(points > 0){
             userPoints[userID] += points;
@@ -80,31 +95,12 @@ abstract contract GeniDexBase is
         }
     }
 
-    /**
-     * Fetch symbol and decimals of a token and cache them if not already stored.
-     *
-     * @param tokenAddress The address of the ERC20 token.
-     * @return symbol The token's symbol.
-     * @return decimals The token's decimals.
-    */
-    function getAndSetTokenMeta(address tokenAddress) internal returns (string memory symbol, uint8 decimals) {
-        // If already cached, return from storage
+    function _getTokenMeta(address tokenAddress) internal view returns (string memory symbol, uint8 decimals) {
         Token storage info = tokens[tokenAddress];
-        if (bytes(info.symbol).length > 0) {
-            return (info.symbol, info.decimals);
+        if(!isTokenListed[tokenAddress]){
+            revert Helper.TokenNotListed(tokenAddress);
         }
-
-        // Otherwise, fetch from token contract
-        if(tokenAddress == address(0)){
-            symbol = 'ETH';
-            decimals = 18;
-        } else {
-            symbol = tokenAddress.getSymbol();
-            decimals = tokenAddress.getDecimals();
-        }
-        tokens[tokenAddress].symbol = symbol;
-        tokens[tokenAddress].decimals = decimals;
-
-        return (symbol, decimals);
+        return (info.symbol, info.decimals);
     }
+
 }
