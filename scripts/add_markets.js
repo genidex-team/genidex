@@ -5,8 +5,16 @@ const data = require('../helpers/data');
 const dataV2 = require('geni_data');
 const geniDexHelper = require('../helpers/genidex.h')
 const {utils} = require("genidex-sdk")
+const {Admin} = require("genidex-sdk/admin")
+const config = require('../config/config');
+let adminSDK;
+let owner;
 
 async function main () {
+
+  await config.init();
+  adminSDK = config.adminSDK;
+  [owner] = await ethers.getSigners();
 
   const geniDexContract = await geniDexHelper.upgrade();
   let geniTokenAddress = dataV2.getGeniTokenAddress(network.name)
@@ -14,7 +22,7 @@ async function main () {
   let arbAddress = data.get('arbAddress');
   let usdtAddress = data.get('usdtAddress');
   let daiAddress = data.get('daiAddress');
-  let minOrderAmount;
+  let minOrderAmount, minTransferAmount;
   console.log('bnbAddress', bnbAddress);
   console.log('usdtAddress', usdtAddress);
 
@@ -24,35 +32,30 @@ async function main () {
   let markets = await geniDexHelper.getAllMarkets();
   console.log('markets', markets);
 
+  await listToken(ethers.ZeroAddress); // list ETH
+  await listToken(geniTokenAddress)
+  await listToken(bnbAddress)
+  await listToken(arbAddress)
+  await listToken(usdtAddress)
+  await listToken(daiAddress)
+
   // GENI_USDT - 1
-  minOrderAmount = utils.parseBaseUnit("10");
-  transaction = await geniDexContract.addMarket(geniTokenAddress, usdtAddress, minOrderAmount);
-  fn.printGasUsed(transaction, '\naddMarket');
+  await addMarket(geniTokenAddress, usdtAddress);
 
   // ETH_USDT - 2
-  minOrderAmount = utils.parseBaseUnit("10");
-  transaction = await geniDexContract.addMarket(ethers.ZeroAddress, usdtAddress, minOrderAmount);
-  fn.printGasUsed(transaction, '\naddMarket');
+  await addMarket(ethers.ZeroAddress, usdtAddress);
 
   // GENI_ETH - 3
-  minOrderAmount = utils.parseBaseUnit("0.0004");
-  transaction = await geniDexContract.addMarket(geniTokenAddress, ethers.ZeroAddress, minOrderAmount);
-  fn.printGasUsed(transaction, '\naddMarket');
+  await addMarket(geniTokenAddress, ethers.ZeroAddress);
 
   // ARB_DAI - 4
-  minOrderAmount = utils.parseBaseUnit("10");
-  transaction = await geniDexContract.addMarket(arbAddress, daiAddress, minOrderAmount);
-  fn.printGasUsed(transaction, '\naddMarket');
+  await addMarket(arbAddress, daiAddress);
 
   // ARB_ETH - 5
-  minOrderAmount = utils.parseBaseUnit("0.0004");
-  transaction = await geniDexContract.addMarket(arbAddress, ethers.ZeroAddress, minOrderAmount);
-  fn.printGasUsed(transaction, '\naddMarket');
+  await addMarket(arbAddress, ethers.ZeroAddress);
 
   // BNB_USDT - 6
-  minOrderAmount = utils.parseBaseUnit("10");
-  transaction = await geniDexContract.addMarket(bnbAddress, usdtAddress, minOrderAmount);
-  fn.printGasUsed(transaction, '\naddMarket');
+  await addMarket(bnbAddress, usdtAddress);
 
   await geniDexContract.updateTokenIsUSD(usdtAddress, true);
   await geniDexContract.updateTokenIsUSD(daiAddress, true);
@@ -67,7 +70,37 @@ async function main () {
 
   markets = await geniDexHelper.getAllMarkets();
   console.log('markets', markets);
+  process.exit(0);
 
+}
+
+async function addMarket(baseToken, quoteToken){
+  try{
+    let tx = await adminSDK.addMarket({
+      signer: owner,
+      baseToken,
+      quoteToken
+    })
+    await fn.printGasUsed(tx, 'addMarket');
+  }catch(error){
+    utils.logError(error)
+  }
+}
+
+async function listToken(tokenAddress){
+  let minTransferAmount = utils.parseBaseUnit("1");
+  let minOrderAmount = utils.parseBaseUnit("10");
+  try{
+    let tx = await adminSDK.listToken({
+      signer: owner,
+      tokenAddress,
+      minTransferAmount,
+      minOrderAmount
+    })
+    await fn.printGasUsed(tx, 'listToken');
+  }catch(error){
+    utils.logError(error)
+  }
 }
 
 main();
