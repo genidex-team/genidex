@@ -11,6 +11,7 @@ echo "";
 echo "================= genidex_contract - deploy.ether.js ================="
 cd ../genidex_contract && npx hardhat run scripts/deploy.ether.js --network $NETWORK && \
 
+cd ../genidex-sdk && node ./bin/generate.data.cjs && npm run build && \
 
 # echo "";echo "";
 # echo "================= genidex_contract - deploy_tokens.js =================="
@@ -18,7 +19,7 @@ cd ../genidex_contract && npx hardhat run scripts/deploy.ether.js --network $NET
 
 echo "";echo "";
 echo "================= genidex_contract - add_markets.js ===================="
-npx hardhat run scripts/add_markets.js --network $NETWORK && \
+cd ../genidex_contract && npx hardhat run scripts/add_markets.js --network $NETWORK && \
 
 echo "";echo "";
 echo "================= genidex_nodejs - src/init.js ===================="

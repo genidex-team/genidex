@@ -8,8 +8,10 @@
         "genidex",
         "Initializable",
         "keccak",
+        "Merkle",
         "mstore",
         "Reentrancy",
+        "sourcify",
         "UUPS"
     ]
 }

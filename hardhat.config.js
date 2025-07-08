@@ -5,7 +5,7 @@ require('@nomicfoundation/hardhat-ethers');
 require('@openzeppelin/hardhat-upgrades');
 require("@nomicfoundation/hardhat-verify");
 require('hardhat-gas-reporter');
-// require("hardhat-contract-sizer");
+require("hardhat-contract-sizer");
 
 const env = require('./helpers/env');
 env.loadDefaultEnv();
@@ -18,6 +18,8 @@ module.exports = {
     alphaSort: true,
     runOnCompile: true,
     disambiguatePaths: false,
+    strict: true,
+    only: ['GeniDex']
   },
   solidity: {
     compilers: [
@@ -28,7 +30,7 @@ module.exports = {
           viaIR: true,
           optimizer: {
             enabled: true,
-            runs: 1400,
+            runs: 2000,
           },
         },
       }
