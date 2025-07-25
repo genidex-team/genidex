@@ -1,17 +1,12 @@
 const { ethers, network } = require('hardhat');
 const fs = require('fs');
-const { exit } = require('process');
 const data = require('geni_data');
 
-const provider = new ethers.JsonRpcProvider("http://localhost:8545");
+let rpc = data.getRPC(network.name);
+const provider = new ethers.JsonRpcProvider(rpc);
 const tokenFile = './data/mainnet_tokens.json';
 
 const recipients = [];
-// for (let i = 0; i < 10; i++) {
-//     //   const wallet = ethers.Wallet.fromMnemonic("test test test test test test test test test test test junk", { path: `m/44'/60'/0'/0/${i}` });
-
-//     recipients.push(wallet.address);
-// }
 
 const ERC20_ABI = [
     "function balanceOf(address) view returns (uint256)",
@@ -42,10 +37,6 @@ async function impersonateAndSend(tokenAddress, decimals, fromAccount) {
 }
 
 async function main() {
-    // const address = '0x4200000000000000000000000000000000000042';
-    // const code = await provider.getCode(address);
-    // console.log(code);
-    // return;
     const strJson = fs.readFileSync(tokenFile, "utf8");
     const tokens = JSON.parse(strJson);
     const [deployer] = await ethers.getSigners();

@@ -11,6 +11,7 @@
         "Merkle",
         "mstore",
         "Reentrancy",
+        "remappings",
         "sourcify",
         "UUPS"
     ]

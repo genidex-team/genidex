@@ -43,6 +43,6 @@ abstract contract Points is GeniDexBase {
     }
 
     function pointDecimals() public pure returns (uint8) {
-        return 18;
+        return 8;
     }
 }

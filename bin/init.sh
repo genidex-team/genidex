@@ -32,6 +32,7 @@ cd ../geni_rewarder && ./bin/init.sh $NETWORK && \
 echo "";echo "";
 echo "================= genidex_contract - set.geni.rewarder.address.js ===================="
 cd ../genidex_contract && npx hardhat run scripts/set.geni.rewarder.address.js --network $NETWORK && \
+npx hardhat run scripts/transfer_mainnet_tokens.js --network $NETWORK
 
 echo "";echo "";
 echo "================= geni_rewarder - contribute.js ===================="
