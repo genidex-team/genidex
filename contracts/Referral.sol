@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./GeniDexBase.sol";
 
 abstract contract Referral is GeniDexBase {
-    function setReferralRoot(bytes32 _referralRoot) external onlyOwner {
+    function setReferralRoot(bytes32 _referralRoot) external onlyRole(OPERATOR_ROLE) {
         referralRoot = _referralRoot;
     }
 

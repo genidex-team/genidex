@@ -14,7 +14,7 @@ abstract contract Points is GeniDexBase {
         _;
     }
 
-    function setGeniRewarder(address _rewarder) external onlyOwner {
+    function setGeniRewarder(address _rewarder) external onlyRole(OPERATOR_ROLE) {
         if (_rewarder == address(0)) {
             revert Helper.InvalidAddress();
         }

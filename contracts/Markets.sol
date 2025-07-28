@@ -9,7 +9,7 @@ abstract contract Markets is GeniDexBase {
 
     function addMarket(
         address baseAddress, address quoteAddress
-    ) external onlyOwner {
+    ) external onlyRole(OPERATOR_ROLE) {
         string memory baseSymbol;
         string memory quoteSymbol;
         uint8 baseDecimals;
@@ -59,7 +59,7 @@ abstract contract Markets is GeniDexBase {
         return outputMarkets;
     }
 
-    function updateMarketIsRewardable(uint256 marketId, bool isRewardable) public onlyOwner() {
+    function updateMarketIsRewardable(uint256 marketId, bool isRewardable) public onlyRole(OPERATOR_ROLE) {
         markets[marketId].isRewardable = isRewardable;
     }
 

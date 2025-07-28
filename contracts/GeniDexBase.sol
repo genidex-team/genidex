@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+// import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRulesUpgradeable.sol";
+// import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
@@ -12,8 +14,8 @@ import "./Helper.sol";
 
 abstract contract GeniDexBase is
     Initializable,
+    AccessControlDefaultAdminRulesUpgradeable,
     UUPSUpgradeable,
-    OwnableUpgradeable,
     PausableUpgradeable,
     ReentrancyGuardTransientUpgradeable,
     Storage
@@ -22,14 +24,21 @@ abstract contract GeniDexBase is
     // using Helper for address;
 
     function __GeniDexBase_init(address initialOwner) internal onlyInitializing {
-        __Ownable_init(initialOwner);
+        __AccessControlDefaultAdminRules_init(7 days, initialOwner);
+        __AccessControl_init();
+        // __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
         __Pausable_init();
         __ReentrancyGuardTransient_init();
         __Storage_init(initialOwner);
+        _grantRole(DEFAULT_ADMIN_ROLE,  initialOwner);
+        _grantRole(UPGRADER_ROLE,       initialOwner);
+        _grantRole(PAUSER_ROLE,         initialOwner);
+        _grantRole(OPERATOR_ROLE,       initialOwner);
+        _grantRole(FEE_MANAGER_ROLE,    initialOwner);
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 
     function __Storage_init(address initialOwner) internal onlyInitializing {
         marketCounter = 0;
@@ -50,7 +59,7 @@ abstract contract GeniDexBase is
         }
     }
 
-    function updateFeeReceiver(address newAddr) external onlyOwner {
+    function updateFeeReceiver(address newAddr) external onlyRole(FEE_MANAGER_ROLE) {
         if (newAddr == address(0)) revert Helper.InvalidAddress();
         if (userIDs[newAddr] != 0) revert Helper.AddressAlreadyLinked();
 

@@ -18,7 +18,7 @@ abstract contract Tokens is GeniDexBase {
         bool autoDetect,
         string calldata manualSymbol,
         uint8 manualDecimals
-    ) external onlyOwner {
+    ) external onlyRole(OPERATOR_ROLE) {
         // if (tokenAddress == address(0)) revert Helper.InvalidTokenAddress();
         // if (isTokenListed[tokenAddress]) revert Helper.TokenAlreadyListed(tokenAddress);
 
@@ -61,19 +61,19 @@ abstract contract Tokens is GeniDexBase {
         emit TokenListed(tokenAddress, symbol);
     }
 
-    function updateTokenIsUSD(address tokenAddress, bool isUSD) external onlyOwner(){
+    function updateTokenIsUSD(address tokenAddress, bool isUSD) external onlyRole(OPERATOR_ROLE){
         tokens[tokenAddress].isUSD = isUSD;
     }
 
-    function updateUSDMarketID(address tokenAddress, uint80 marketID) external onlyOwner{
+    function updateUSDMarketID(address tokenAddress, uint80 marketID) external onlyRole(OPERATOR_ROLE){
         tokens[tokenAddress].usdMarketID = marketID;
     }
 
-    function updateMinOrderAmount(address tokenAddress, uint80 minOrderAmount) external onlyOwner{
+    function updateMinOrderAmount(address tokenAddress, uint80 minOrderAmount) external onlyRole(OPERATOR_ROLE){
         tokens[tokenAddress].minOrderAmount = minOrderAmount;
     }
 
-    function updateMinTransferAmount(address tokenAddress, uint80 minTransferAmount) external onlyOwner{
+    function updateMinTransferAmount(address tokenAddress, uint80 minTransferAmount) external onlyRole(OPERATOR_ROLE){
         tokens[tokenAddress].minTransferAmount = minTransferAmount;
     }
 

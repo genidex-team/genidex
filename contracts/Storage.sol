@@ -44,6 +44,12 @@ abstract contract Storage {
         string symbol;
     }
 
+    // ---------- ROLE constants ----------
+    bytes32 public constant UPGRADER_ROLE       = keccak256("UPGRADER_ROLE");
+    bytes32 public constant PAUSER_ROLE         = keccak256("PAUSER_ROLE");
+    bytes32 public constant OPERATOR_ROLE       = keccak256("OPERATOR_ROLE");
+    bytes32 public constant FEE_MANAGER_ROLE    = keccak256("FEE_MANAGER_ROLE");
+
     uint256 public constant BASE_UNIT = 10 ** 8;
     uint80 internal constant FEE_USER_ID = 1;
 
