@@ -310,41 +310,4 @@ abstract contract BuyOrders is GeniDexBase {
         return buyOrders[marketID].length;
     }
 
-    /*function getBuyOrders(
-        uint256 marketId,
-        uint256 minPrice,
-        uint256 limit
-    ) public view returns (OutputOrder[] memory rsBuyOrders) {
-        Order[] storage orders = buyOrders[marketId];
-        uint256 totalOrders = orders.length;
-
-        // Count matching orders first
-        uint256 matchCount = 0;
-        for (uint256 i = 0; i < totalOrders; i++) {
-            if (orders[i].price >= minPrice) {
-                matchCount++;
-                if(matchCount>limit) break;
-            }
-        }
-
-        // Allocate exact size
-        rsBuyOrders = new OutputOrder[](matchCount);
-
-        uint256 count = 0;
-        for (uint256 j = 0; j < totalOrders; j++) {
-            if (orders[j].price >= minPrice) {
-                Order storage order = orders[j];
-                rsBuyOrders[count] = OutputOrder({
-                    id: j,
-                    userID: order.userID,
-                    price: order.price,
-                    quantity: order.quantity
-                });
-                count++;
-                if(count>limit) break;
-            }
-        }
-        return rsBuyOrders;
-    }*/
-
 }
