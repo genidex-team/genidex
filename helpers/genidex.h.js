@@ -36,7 +36,7 @@ class GeniDexHelper{
     async deploy(){
         const GeniDex = await ethers.getContractFactory('GeniDex');
         console.log('Deploying GeniDex...');
-        
+
         const [owner] = await ethers.getSigners();
         console.log('owner.address', owner.address)
 
@@ -65,10 +65,17 @@ class GeniDexHelper{
         const proxyAddress = data.getGeniDexAddress(network.name);
         console.log(proxyAddress);
         const GeniDex = await ethers.getContractFactory('GeniDex');
+        const storedImpl = await upgrades.erc1967.getImplementationAddress(proxyAddress);
+
         console.log('Upgrading GeniDex...');
         const geniDexContract = await upgrades.upgradeProxy(proxyAddress, GeniDex, {
             kind: 'uups'
         });
+        const newImpl = await upgrades.erc1967.getImplementationAddress(proxyAddress);
+
+        console.log(`\nOld Implementation\t: ${storedImpl}`)
+        console.log(`New Implementation\t: ${newImpl}\n\n`)
+
         data.setGeniDexAddress(network.name, geniDexContract.target);
         console.log('GeniDex upgraded. Proxy address:', geniDexContract.target);
         // console.log(geniDex.deployTransaction);

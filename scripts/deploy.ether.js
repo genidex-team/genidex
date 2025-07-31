@@ -7,6 +7,7 @@ const {factory} = require('geni_helper');
 
 // const proxyAddress = data.getGeniDexAddress(network.name)
 const proxySalt = data.getGeniDexSalt();
+// const proxySalt = data.randomBytes32();
 
 async function main() {
     const [deployer] = await ethers.getSigners();
