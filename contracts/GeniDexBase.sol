@@ -25,13 +25,10 @@ abstract contract GeniDexBase is
 
     function __GeniDexBase_init(address initialOwner) internal onlyInitializing {
         __AccessControlDefaultAdminRules_init(7 days, initialOwner);
-        __AccessControl_init();
-        // __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
         __Pausable_init();
         __ReentrancyGuardTransient_init();
         __Storage_init(initialOwner);
-        _grantRole(DEFAULT_ADMIN_ROLE,  initialOwner);
         _grantRole(UPGRADER_ROLE,       initialOwner);
         _grantRole(PAUSER_ROLE,         initialOwner);
         _grantRole(OPERATOR_ROLE,       initialOwner);
