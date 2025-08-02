@@ -8,6 +8,8 @@ abstract contract Markets is GeniDexBase {
     function addMarket(
         address baseAddress, address quoteAddress
     ) external onlyRole(OPERATOR_ROLE) {
+        Storage.MarketData storage m = Storage.market();
+
         string memory baseSymbol;
         string memory quoteSymbol;
         uint8 baseDecimals;
@@ -16,14 +18,14 @@ abstract contract Markets is GeniDexBase {
         (quoteSymbol, quoteDecimals) = _getTokenMeta(quoteAddress);
 
         bytes32 hash = generateMarketHash(baseAddress, quoteAddress);
-        if (marketIDs[hash] != 0) {
+        if (m.marketIDs[hash] != 0) {
             revert Helper.MarketAlreadyExists(baseAddress, quoteAddress);
         }
-        marketCounter++;
+        m.marketCounter++;
 
-        markets[marketCounter] = Market({
+        m.markets[m.marketCounter] = Storage.Market({
             symbol: string(abi.encodePacked(baseSymbol, '_', quoteSymbol)),
-            id: marketCounter,
+            id: m.marketCounter,
             price: 0,
             lastUpdatePrice: 0,
             baseAddress: baseAddress,
@@ -31,17 +33,8 @@ abstract contract Markets is GeniDexBase {
             creator: msg.sender,
             isRewardable: false
         });
-        marketIDs[hash] = marketCounter;
+        m.marketIDs[hash] = m.marketCounter;
 
-    }
-
-    function getMarketID(address baseAddress, address quoteAddress) external view returns(uint256){
-        bytes32 hash = generateMarketHash(baseAddress, quoteAddress);
-        return marketIDs[hash];
-    }
-
-    function getMarket(uint256 id) external view returns(Market memory) {
-        return markets[id];
     }
 
     function generateMarketHash(address baseAddress, address quoteAddress) public pure returns (bytes32) {
@@ -49,16 +42,9 @@ abstract contract Markets is GeniDexBase {
         return hash;
     }
 
-    function getAllMarkets() external view returns(Market[] memory) {
-        Market[] memory outputMarkets = new Market[](marketCounter);
-        for(uint256 i=1; i<=marketCounter; i++){
-            outputMarkets[i-1] = markets[i];
-        }
-        return outputMarkets;
-    }
-
     function updateMarketIsRewardable(uint256 marketId, bool isRewardable) public onlyRole(OPERATOR_ROLE) {
-        markets[marketId].isRewardable = isRewardable;
+        Storage.MarketData storage m = Storage.market();
+        m.markets[marketId].isRewardable = isRewardable;
     }
 
 }

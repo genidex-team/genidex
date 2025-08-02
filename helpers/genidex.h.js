@@ -34,6 +34,10 @@ class GeniDexHelper{
     }
 
     async deploy(){
+        const GeniDexReader = await ethers.getContractFactory("GeniDexReader");
+        const geniDexReader = await GeniDexReader.deploy();
+        await geniDexReader.waitForDeployment();
+
         const GeniDex = await ethers.getContractFactory('GeniDex');
         console.log('Deploying GeniDex...');
 
@@ -48,15 +52,29 @@ class GeniDexHelper{
         await geniDexContract.waitForDeployment();
         console.log('\nGeniDex deployed to:', geniDexContract.target);
         data.setGeniDexAddress(network.name, geniDexContract.target);
+
+        await geniDexContract.setReader(geniDexReader.target);
+
+        const reader = new ethers.Contract(geniDexContract.target, geniDexReader.interface.formatJson(), ethers.provider);
+        const readerAddress = await reader.getReader();
+        console.log({readerAddress});
+        console.log({readerAddress: geniDexReader.target});
+
+        const artifact = await hre.artifacts.readArtifact("GeniDex");
+        const artifact2 = await hre.artifacts.readArtifact("GeniDexReader");
+        // console.log(artifact.abi);
+        const abi = [
+            ...artifact.abi,
+            ...artifact2.abi
+        ]
+        this.writeABIFiles(abi);
+
         process.exit()
 
         await fn.printGasUsed(geniDexContract.deploymentTransaction(), 'deployProxy');
         if(network.name == 'sepolia' || network.name == 'op_sepolia'){
             await this.verify(geniDexContract.target);
         }
-        const artifact = await hre.artifacts.readArtifact("GeniDex");
-        // console.log(artifact.abi);
-        this.writeABIFiles(artifact.abi);
         return geniDexContract;
     }
 
@@ -84,8 +102,13 @@ class GeniDexHelper{
             await this.verify(geniDexContract.target);
         }
         const artifact = await hre.artifacts.readArtifact("GeniDex");
+        const artifact2 = await hre.artifacts.readArtifact("GeniDexReader");
         // console.log(artifact.abi);
-        this.writeABIFiles(artifact.abi);
+        const abi = [
+            ...artifact.abi,
+            ...artifact2.abi
+        ]
+        this.writeABIFiles(abi);
         return geniDexContract;
     }
 

@@ -21,9 +21,9 @@ echo "";echo "";
 echo "================= genidex_contract - add_markets.js ===================="
 cd ../genidex_contract && npx hardhat run scripts/add_markets.js --network $NETWORK && \
 
-echo "";echo "";
-echo "================= genidex_nodejs - src/init.js ===================="
-cd ../genidex_nodejs && node src/init.js $NETWORK && \
+# echo "";echo "";
+# echo "================= genidex_nodejs - src/init.js ===================="
+# cd ../genidex_nodejs && node src/init.js $NETWORK && \
 
 echo "";echo "";
 echo "================= geni_rewarder - init  ===================="

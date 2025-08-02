@@ -25,4 +25,9 @@ class Config{
 
 }
 
-module.exports = new Config();
+const config = new Config();
+async function main(){
+    await config.init();
+}
+main();
+module.exports = config;

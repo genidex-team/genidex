@@ -9,6 +9,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardTransientUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./Storage.sol";
 import "./Helper.sol";
 
@@ -17,9 +18,9 @@ abstract contract GeniDexBase is
     AccessControlDefaultAdminRulesUpgradeable,
     UUPSUpgradeable,
     PausableUpgradeable,
-    ReentrancyGuardTransientUpgradeable,
-    Storage
+    ReentrancyGuardTransientUpgradeable
 {
+    using Storage for *;
     event FeeReceiverUpdated(address indexed oldAddress, address indexed newAddress);
     // using Helper for address;
 
@@ -38,34 +39,38 @@ abstract contract GeniDexBase is
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 
     function __Storage_init(address initialOwner) internal onlyInitializing {
-        marketCounter = 0;
-        totalUnclaimedPoints = 0;
+        Storage.MarketData storage m = Storage.market();
+        Storage.UserData storage u = Storage.user();
+        m.marketCounter = 0;
+        u.totalUnclaimedPoints = 0;
         // feeReceiver
         _generateUserID(initialOwner);
     }
 
     function _generateUserID(address userAddress) internal returns(uint80){
-        uint80 userID = userIDs[userAddress];
+        Storage.UserData storage u = Storage.user();
+        uint80 userID = u.userIDs[userAddress];
         if(userID>0){
             return userID;
         }else{
-            userID = ++userCounter;
-            userAddresses[userID] = userAddress;
-            userIDs[userAddress] = userID;
+            userID = ++u.userCounter;
+            u.userAddresses[userID] = userAddress;
+            u.userIDs[userAddress] = userID;
             return userID;
         }
     }
 
     function updateFeeReceiver(address newAddr) external onlyRole(FEE_MANAGER_ROLE) {
+        Storage.UserData storage u = Storage.user();
         if (newAddr == address(0)) revert Helper.InvalidAddress();
-        if (userIDs[newAddr] != 0) revert Helper.AddressAlreadyLinked();
+        if (u.userIDs[newAddr] != 0) revert Helper.AddressAlreadyLinked();
 
-        address oldAddr = userAddresses[FEE_USER_ID];
+        address oldAddr = u.userAddresses[FEE_USER_ID];
 
-        userAddresses[FEE_USER_ID] = newAddr;
-        userIDs[newAddr]           = FEE_USER_ID;
+        u.userAddresses[FEE_USER_ID] = newAddr;
+        u.userIDs[newAddr]           = FEE_USER_ID;
 
-        delete userIDs[oldAddr];
+        delete u.userIDs[oldAddr];
 
         emit FeeReceiverUpdated(oldAddr, newAddr);
     }
@@ -80,17 +85,20 @@ abstract contract GeniDexBase is
         uint80 userID,
         uint256 totalTradeValue
     ) internal {
-        Token storage quoteToken = tokens[quoteAddress];
+        Storage.TokenData storage t = Storage.token();
+        Storage.MarketData storage m = Storage.market();
+        Storage.UserData storage u = Storage.user();
+        Storage.Token storage quoteToken = t.tokens[quoteAddress];
         uint256 points = 0;
         if(quoteToken.isUSD){
             points = totalTradeValue;
         }else if(quoteToken.usdMarketID != 0){
-            Market storage usdMarket = markets[quoteToken.usdMarketID];
+            Storage.Market storage usdMarket = m.markets[quoteToken.usdMarketID];
             points = usdMarket.price * totalTradeValue / BASE_UNIT;
         }
         if(points > 0){
-            userPoints[userID] += points;
-            totalUnclaimedPoints += points;
+            u.userPoints[userID] += points;
+            u.totalUnclaimedPoints += points;
 
             /*address ref = userReferrer[traderAddress];
             if (ref != address(0)) {
@@ -102,11 +110,32 @@ abstract contract GeniDexBase is
     }
 
     function _getTokenMeta(address tokenAddress) internal view returns (string memory symbol, uint8 decimals) {
-        Token storage info = tokens[tokenAddress];
-        if(!isTokenListed[tokenAddress]){
+        Storage.TokenData storage t = Storage.token();
+        Storage.Token storage info = t.tokens[tokenAddress];
+        if(!t.isListed[tokenAddress]){
             revert Helper.TokenNotListed(tokenAddress);
         }
         return (info.symbol, info.decimals);
+    }
+
+    function setReader(address _reader) external onlyRole(UPGRADER_ROLE){
+        Storage.CoreConfig storage c = Storage.core();
+        c.reader = _reader;
+    }
+
+    /* ----------  FALLBACK ONLY FOR VIEW SELECTORS  ---------- */
+    fallback() external {
+        Storage.CoreConfig storage c = Storage.core();
+        address reader = c.reader;
+        assembly {
+            // Copy calldata
+            calldatacopy(0, 0, calldatasize())
+            // delegatecall into the view facet
+            let ok := delegatecall(gas(), reader, 0, calldatasize(), 0, 0)
+            returndatacopy(0, 0, returndatasize())
+            if iszero(ok) { revert(0, returndatasize()) }
+            return(0, returndatasize())
+        }
     }
 
 }

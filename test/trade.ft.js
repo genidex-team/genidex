@@ -44,15 +44,14 @@ async function main() {
         console.log('trader1 - buyer:', trader1.address);
         console.log('trader2 - buyer:', trader2.address);
         // console.log('feeReceiver', feeReceiver.address);
-        market = new Market(marketId);
+        market = await genidexSDK.markets.getMarket(marketId);
         // console.log({market});
-        baseAddress = market.data.baseAddress;
-        quoteAddress = market.data.quoteAddress;
-        quoteDecimal = market.data.quoteDecimals;
-        baseDecimal = market.data.baseDecimals;
-        price = market.parsePrice(0.000025);
-        quantity = market.parseQuantity(1);
-        total = market.total(price, quantity);
+        baseAddress = market.baseAddress;
+        quoteAddress = market.quoteAddress;
+        quoteDecimal = market.quoteDecimals;
+        baseDecimal = market.baseDecimals;
+        price = utils.parseBaseUnit('0.1');//market.parsePrice(0.000025);
+        quantity = utils.parseBaseUnit('1');//market.parseQuantity(1);
     });
 
     describe('Trade', () => {

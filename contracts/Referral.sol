@@ -7,12 +7,14 @@ import "./GeniDexBase.sol";
 
 abstract contract Referral is GeniDexBase {
     function setReferralRoot(bytes32 _referralRoot) external onlyRole(OPERATOR_ROLE) {
-        referralRoot = _referralRoot;
+        Storage.UserData storage u = Storage.user();
+        u.referralRoot = _referralRoot;
     }
 
     function setReferrer(address _referrer) external {
-        if (userReferrer[msg.sender] != address(0)) {
-            revert Helper.ReferrerAlreadySet(userReferrer[msg.sender]);
+        Storage.UserData storage u = Storage.user();
+        if (u.userReferrer[msg.sender] != address(0)) {
+            revert Helper.ReferrerAlreadySet(u.userReferrer[msg.sender]);
         }
         if (_referrer == address(0)) {
             revert Helper.InvalidAddress();
@@ -20,40 +22,29 @@ abstract contract Referral is GeniDexBase {
         if (_referrer == msg.sender) {
             revert Helper.SelfReferralNotAllowed(msg.sender);
         }
-        userReferrer[msg.sender] = _referrer;
-        refereesOf[_referrer].push(msg.sender);
-    }
-
-    function getReferees(
-        address referrer
-    ) external view returns (address[] memory) {
-        return refereesOf[referrer];
-    }
-
-    function getReferrer(
-        address referee
-    ) external view returns (address) {
-        return userReferrer[referee];
+        u.userReferrer[msg.sender] = _referrer;
+        u.refereesOf[_referrer].push(msg.sender);
     }
 
     function migrateReferees(
         bytes32[] calldata proof,
         address[] calldata referees
     ) external {
-        if (referralRoot == bytes32(0)) {
+        Storage.UserData storage u = Storage.user();
+        if (u.referralRoot == bytes32(0)) {
             revert Helper.ReferralRootNotSet();
         }
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(msg.sender, referees)))
         );
-        if (!MerkleProof.verify(proof, referralRoot, leaf)) {
+        if (!MerkleProof.verify(proof, u.referralRoot, leaf)) {
             revert Helper.InvalidProof();
         }
         for (uint256 i = 0; i < referees.length; i++) {
             address referee = referees[i];
-            if (userReferrer[referee] == address(0) && referee != msg.sender) {
-                userReferrer[referee] = msg.sender;
-                refereesOf[msg.sender].push(referee);
+            if (u.userReferrer[referee] == address(0) && referee != msg.sender) {
+                u.userReferrer[referee] = msg.sender;
+                u.refereesOf[msg.sender].push(referee);
             }
         }
     }

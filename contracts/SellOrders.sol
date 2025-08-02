@@ -44,43 +44,46 @@ abstract contract SellOrders is GeniDexBase {
         address referrer
     ) external nonReentrant whenNotPaused
     {
-        if (marketId > marketCounter) {
-            revert Helper.InvalidMarketId(marketId, marketCounter);
+        Storage.TokenData storage t = Storage.token();
+        Storage.UserData storage u = Storage.user();
+        Storage.MarketData storage m = Storage.market();
+        if (marketId > m.marketCounter) {
+            revert Helper.InvalidMarketId(marketId, m.marketCounter);
         }
-        Market storage market = markets[marketId];
+        Storage.Market storage market = m.markets[marketId];
         //lv: local variable
         PlaceSellOrderVariable memory lv = PlaceSellOrderVariable({
             baseAddress: market.baseAddress,
             quoteAddress: market.quoteAddress,
             lastPrice: 0,
             total: 0,
-            userID: userIDs[msg.sender]
+            userID: u.userIDs[msg.sender]
         });
         if(lv.userID<=0){
             revert Helper.UserNotFound(msg.sender);
         }
 
         //set referrer
-        if (userReferrer[msg.sender] == address(0)
+        if (u.userReferrer[msg.sender] == address(0)
             && referrer != address(0)
             && referrer != msg.sender)
         {
-            userReferrer[msg.sender] = referrer;
-            refereesOf[referrer].push(msg.sender);
+            u.userReferrer[msg.sender] = referrer;
+            u.refereesOf[referrer].push(msg.sender);
         }
 
         lv.total = uint256(price) * quantity / BASE_UNIT;
-        if (lv.total < tokens[lv.quoteAddress].minOrderAmount) {
-            revert Helper.TotalTooSmall(lv.total, tokens[lv.quoteAddress].minOrderAmount);
+        if (lv.total < t.tokens[lv.quoteAddress].minOrderAmount) {
+            revert Helper.TotalTooSmall(lv.total, t.tokens[lv.quoteAddress].minOrderAmount);
         }
 
-        Order memory sellOrder = Order({
+        Storage.Order memory sellOrder = Storage.Order({
             userID: lv.userID,
             price: price,
             quantity: quantity
         });
 
-        mapping(address => uint256) storage sellerBalances = balances[lv.userID];
+        mapping(address => uint256) storage sellerBalances = u.balances[lv.userID];
         if(sellerBalances[lv.baseAddress] < quantity){
             revert Helper.InsufficientBalance({
                 available: sellerBalances[lv.baseAddress],
@@ -88,7 +91,7 @@ abstract contract SellOrders is GeniDexBase {
             });
         }
 
-        Order[] storage marketSellOrders = sellOrders[marketId];
+        Storage.Order[] storage marketSellOrders = m.sellOrders[marketId];
         // Order[] storage marketBuyOrders = buyOrders[marketId];
 
         lv.lastPrice = matchSellOrder(marketId, market, sellOrder, buyOrderIDs, lv);
@@ -111,18 +114,19 @@ abstract contract SellOrders is GeniDexBase {
 
     function matchSellOrder(
         uint256 marketId,
-        Market storage market,
-        Order memory sellOrder,
+        Storage.Market storage market,
+        Storage.Order memory sellOrder,
         uint256[] calldata buyOrderIDs,
         PlaceSellOrderVariable memory lv
     ) private returns(uint80 lastPrice)
     {
-
+        Storage.UserData storage u = Storage.user();
+        Storage.MarketData storage m = Storage.market();
         lastPrice = 0;
         uint256 length = buyOrderIDs.length;
         if(length==0) return lastPrice;
 
-        Order[] storage marketBuyOrders = buyOrders[marketId];
+        Storage.Order[] storage marketBuyOrders = m.buyOrders[marketId];
         // uint256 totalTradeQuantity;
         uint256 totalTradeValue = 0;
 
@@ -131,7 +135,7 @@ abstract contract SellOrders is GeniDexBase {
                 break;
             }
             uint256 buyOrderID = buyOrderIDs[i];
-            Order storage buyOrder = marketBuyOrders[buyOrderID];
+            Storage.Order storage buyOrder = marketBuyOrders[buyOrderID];
             uint80 buyOrderPrice = buyOrder.price;
             uint80 buyOrderQuantity = buyOrder.quantity;
             if (buyOrderPrice >= sellOrder.price && buyOrderQuantity>0) {
@@ -146,7 +150,7 @@ abstract contract SellOrders is GeniDexBase {
                 // totalTradeQuantity += tradeQuantity;
                 totalTradeValue += tradeValue;
 
-                balances[buyOrder.userID][lv.baseAddress] += tradeQuantity;
+                u.balances[buyOrder.userID][lv.baseAddress] += tradeQuantity;
                 lastPrice = buyOrderPrice;
             }
             unchecked{
@@ -155,8 +159,8 @@ abstract contract SellOrders is GeniDexBase {
         }
         if(totalTradeValue>0){
             uint256 totalFee = _fee(totalTradeValue);
-            balances[sellOrder.userID][lv.quoteAddress] += (totalTradeValue - totalFee);
-            balances[FEE_USER_ID][lv.quoteAddress] += 2*totalFee;
+            u.balances[sellOrder.userID][lv.quoteAddress] += (totalTradeValue - totalFee);
+            u.balances[FEE_USER_ID][lv.quoteAddress] += 2*totalFee;
 
             //update geniPoints
             if(market.isRewardable){
@@ -172,7 +176,6 @@ abstract contract SellOrders is GeniDexBase {
         return lastPrice;
     }
 
-
     event OnCancelSellOrder(address indexed trader, uint256 indexed marketId, uint256 orderIndex);
 
     function cancelSellOrder(
@@ -180,19 +183,20 @@ abstract contract SellOrders is GeniDexBase {
         uint256 orderIndex
     ) external nonReentrant whenNotPaused
     {
-
-        uint80 userID = userIDs[msg.sender];
+        Storage.UserData storage u = Storage.user();
+        Storage.MarketData storage m = Storage.market();
+        uint80 userID = u.userIDs[msg.sender];
         if(userID<=0){
             revert Helper.UserNotFound(msg.sender);
         }
         // Order[] storage marketOrders = sellOrders[marketId];
-        address baseAddress = markets[marketId].baseAddress;
+        address baseAddress = m.markets[marketId].baseAddress;
 
         // if(orderIndex >= marketOrders.length){
         //     revert Helper.InvalidValue({providedValue: orderIndex});
         // }
 
-        Order storage order = sellOrders[marketId][orderIndex];
+        Storage.Order storage order = m.sellOrders[marketId][orderIndex];
         uint80 orderUserID = order.userID;
         if (userID != orderUserID) {
             revert Helper.Unauthorized(userID, orderUserID);
@@ -202,51 +206,9 @@ abstract contract SellOrders is GeniDexBase {
             revert Helper.OrderAlreadyCanceled(orderIndex);
         }
         order.quantity = 0;
-        balances[orderUserID][baseAddress] += quantity;
+        u.balances[orderUserID][baseAddress] += quantity;
         
         emit OnCancelSellOrder(msg.sender, marketId, orderIndex);
     }
-
-    /// @notice Return the total number of sell orders for a market
-    function getSellOrdersLength(uint256 marketID) external view returns (uint256) {
-        return sellOrders[marketID].length;
-    }
-
-    /*function getSellOrders(
-        uint256 marketId,
-        uint256 maxPrice,
-        uint256 limit
-    ) public view returns (OutputOrder[] memory rsSellOrders) {
-        Order[] storage orders = sellOrders[marketId];
-        uint256 totalOrders = orders.length;
-
-        // Count matching orders first
-        uint256 matchCount = 0;
-        for (uint256 i = 0; i < totalOrders; i++) {
-            if (orders[i].price <= maxPrice) {
-                matchCount++;
-                if(matchCount>limit) break;
-            }
-        }
-
-        // Allocate exact size
-        rsSellOrders = new OutputOrder[](matchCount);
-
-        uint256 count = 0;
-        for (uint256 j = 0; j < totalOrders; j++) {
-            if (orders[j].price <= maxPrice) {
-                Order storage order = orders[j];
-                rsSellOrders[count] = OutputOrder({
-                    id: j,
-                    userID: order.userID,
-                    price: order.price,
-                    quantity: order.quantity
-                });
-                count++;
-                if(count>limit) break;
-            }
-        }
-        return rsSellOrders;
-    }*/
 
 }

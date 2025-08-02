@@ -26,11 +26,8 @@ async function main () {
   console.log('bnbAddress', bnbAddress);
   console.log('usdtAddress', usdtAddress);
 
-  // let a = await geniDexContract.getAllMarkets();
-  // console.log(a)
-  // return;
-  let markets = await geniDexHelper.getAllMarkets();
-  console.log('markets', markets);
+  // let markets = await config.genidexSDK.markets.getAllMarkets();
+  // console.log('markets', markets);
 
   await listToken(ethers.ZeroAddress); // list ETH
   await listToken(geniTokenAddress)
@@ -68,7 +65,7 @@ async function main () {
 
   // await geniDexContract.updateUSDMarketID(ethers.ZeroAddress, 2);
 
-  markets = await geniDexHelper.getAllMarkets();
+  markets = await config.genidexSDK.markets.getAllMarkets();
   console.log('markets', markets);
   process.exit(0);
 

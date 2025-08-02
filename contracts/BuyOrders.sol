@@ -49,10 +49,13 @@ abstract contract BuyOrders is GeniDexBase {
         address referrer
     ) external nonReentrant whenNotPaused
     {
-        if (marketId > marketCounter) {
-            revert Helper.InvalidMarketId(marketId, marketCounter);
+        Storage.TokenData storage t = Storage.token();
+        Storage.UserData storage u = Storage.user();
+        Storage.MarketData storage m = Storage.market();
+        if (marketId > m.marketCounter) {
+            revert Helper.InvalidMarketId(marketId, m.marketCounter);
         }
-        Market storage market = markets[marketId];
+        Storage.Market storage market = m.markets[marketId];
         //lv: local variable
         PlaceBuyOrderVariable memory lv = PlaceBuyOrderVariable({
             baseAddress: market.baseAddress,
@@ -62,31 +65,31 @@ abstract contract BuyOrders is GeniDexBase {
             totalValue: 0,
             lastPrice: 0,
             remainingValue: 0,
-            userID: userIDs[msg.sender]
+            userID: u.userIDs[msg.sender]
         });
 
         if(lv.userID<=0){
             revert Helper.UserNotFound(msg.sender);
         }
 
-        Order memory buyOrder = Order({
+        Storage.Order memory buyOrder = Storage.Order({
             userID: lv.userID,
             price: price,
             quantity: quantity
         });
 
         //set referrer
-        if (userReferrer[msg.sender] == address(0) && referrer != address(0) && referrer != msg.sender) {
-            userReferrer[msg.sender] = referrer;
-            refereesOf[referrer].push(msg.sender);
+        if (u.userReferrer[msg.sender] == address(0) && referrer != address(0) && referrer != msg.sender) {
+            u.userReferrer[msg.sender] = referrer;
+            u.refereesOf[referrer].push(msg.sender);
         }
 
         lv.total = uint256(price) * quantity / BASE_UNIT;
-        if (lv.total < tokens[lv.quoteAddress].minOrderAmount) {
-            revert Helper.TotalTooSmall(lv.total, tokens[lv.quoteAddress].minOrderAmount);
+        if (lv.total < t.tokens[lv.quoteAddress].minOrderAmount) {
+            revert Helper.TotalTooSmall(lv.total, t.tokens[lv.quoteAddress].minOrderAmount);
         }
 
-        mapping(address => uint256) storage buyerBalances = balances[lv.userID];
+        mapping(address => uint256) storage buyerBalances = u.balances[lv.userID];
         uint256 buyerQuoteBalance = buyerBalances[lv.quoteAddress];
         if(buyerQuoteBalance < lv.total + _fee(lv.total)){
             revert Helper.InsufficientBalance({
@@ -104,9 +107,9 @@ abstract contract BuyOrders is GeniDexBase {
 
         // credit the feeReceiver's balance
         // seller fee + buyer fee = 2*_fee(lv.totalTradeValue)
-        balances[FEE_USER_ID][lv.quoteAddress] += 2 * _fee(lv.totalTradeValue);
+        u.balances[FEE_USER_ID][lv.quoteAddress] += 2 * _fee(lv.totalTradeValue);
 
-        Order[] storage marketBuyOrders = buyOrders[marketId];
+        Storage.Order[] storage marketBuyOrders = m.buyOrders[marketId];
 
         uint256 orderIndex = 0;
         if(buyOrder.quantity>0){
@@ -126,26 +129,30 @@ abstract contract BuyOrders is GeniDexBase {
 
     function matchBuyOrder(
         uint256 marketId,
-        Market storage market,
-        Order memory buyOrder,
+        Storage.Market storage market,
+        Storage.Order memory buyOrder,
         uint256[] calldata sellOrderIDs,
         PlaceBuyOrderVariable memory lv
     ) private returns(uint256 totalTradeValue, uint80 lastPrice)
     {
+        // CoreConfig storage c = Storage.core();
+        // Storage.TokenData storage t = Storage.token();
+        Storage.UserData storage u = Storage.user();
+        Storage.MarketData storage m = Storage.market();
         //matchBuyOrder
         totalTradeValue = 0;
         lastPrice = 0;
         uint256 length = sellOrderIDs.length;
         if(length==0) return (totalTradeValue, lastPrice);
 
-        Order[] storage marketSellOrders = sellOrders[marketId];
+        Storage.Order[] storage marketSellOrders = m.sellOrders[marketId];
         uint256 totalTradeQuantity = 0;
         for(uint256 i=0; i<length;){
             if(buyOrder.quantity<=0){
                 break;
             }
             // uint256 sellOrderID = sellOrderIDs[i];
-            Order storage sellOrder = marketSellOrders[sellOrderIDs[i]];
+            Storage.Order storage sellOrder = marketSellOrders[sellOrderIDs[i]];
             uint80 sellOrderPrice = sellOrder.price;
             uint80 sellOrderQuantity = sellOrder.quantity;
             if (sellOrderPrice <= buyOrder.price && sellOrderQuantity>0) {
@@ -163,7 +170,7 @@ abstract contract BuyOrders is GeniDexBase {
                 totalTradeValue += tradeValue;
 
                 // credit (quote token) the seller's balance
-                balances[sellOrder.userID][lv.quoteAddress] += tradeValue - _fee(tradeValue);
+                u.balances[sellOrder.userID][lv.quoteAddress] += tradeValue - _fee(tradeValue);
                 lastPrice = sellOrderPrice;
             }
             unchecked{
@@ -172,7 +179,7 @@ abstract contract BuyOrders is GeniDexBase {
         }
         if(totalTradeValue>0){
             // credit (base token) the buyer's balance
-            balances[buyOrder.userID][lv.baseAddress] += totalTradeQuantity;
+            u.balances[buyOrder.userID][lv.baseAddress] += totalTradeQuantity;
 
             //update geniPoints
             if(market.isRewardable){
@@ -195,19 +202,21 @@ abstract contract BuyOrders is GeniDexBase {
         uint256 orderIndex
     ) external nonReentrant whenNotPaused
     {
-        uint80 userID = userIDs[msg.sender];
+        Storage.UserData storage u = Storage.user();
+        Storage.MarketData storage m = Storage.market();
+        uint80 userID = u.userIDs[msg.sender];
         if(userID<=0){
             revert Helper.UserNotFound(msg.sender);
         }
         //InvalidValue
         // Order[] storage marketOrders = buyOrders[marketId];
-        address quoteAddress = markets[marketId].quoteAddress;
+        address quoteAddress = m.markets[marketId].quoteAddress;
 
         // if(orderIndex >= marketOrders.length){
         //     revert Helper.InvalidValue({providedValue: orderIndex});
         // }
 
-        Order storage order = buyOrders[marketId][orderIndex];
+        Storage.Order storage order = m.buyOrders[marketId][orderIndex];
         uint80 orderUserID = order.userID;
         if (userID != orderUserID) {
             revert Helper.Unauthorized(userID, orderUserID);
@@ -218,96 +227,9 @@ abstract contract BuyOrders is GeniDexBase {
         }
         uint256 total = quantity * order.price / BASE_UNIT;
         order.quantity = 0;
-        balances[orderUserID][quoteAddress] += total + _fee(total);
+        u.balances[orderUserID][quoteAddress] += total + _fee(total);
 
         emit OnCancelBuyOrder(msg.sender, marketId, orderIndex);
-    }
-
-    function getFilledOrders(
-        OrderType orderType,
-        uint256 marketID,
-        uint256 limit
-    ) external view returns (uint256[] memory) {
-        Order[] storage list;
-        if(orderType==OrderType.Buy){
-            list = buyOrders[marketID];
-        }else{
-            list = sellOrders[marketID];
-        }
-        uint256 len = list.length;
-        uint256 count = 0;
-        for (uint256 i=0; i < len; i++) {
-            if(list[i].quantity==0){
-                count++;
-                if(count>limit) break;
-            }
-        }
-        uint256[] memory result = new uint256[](count);
-        uint256 j = 0;
-
-        for (uint256 i = 0; i < len; i++) {
-            if (list[i].quantity == 0) {
-                result[j] = i;
-                j++;
-                if(count>limit) break;
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * @notice Retrieve buy orders of `marketID` with pagination.
-     * @param marketID   The market identifier.
-     * @param offset     Index of the first element to return (0-based).
-     * @param limit      Maximum number of elements to return.
-     * @return orders    Array of Order with length <= limit.
-     */
-    function getOrders(
-        OrderType orderType,
-        uint256 marketID,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (OutputOrder[] memory orders) {
-        Order[] storage list;
-        if(orderType==OrderType.Buy){
-            list = buyOrders[marketID];
-        }else{
-            list = sellOrders[marketID];
-        }
-        uint256 len = list.length;
-
-        if (offset >= len) {
-            // Offset exceeds array length → return empty array
-            return new OutputOrder[](0);
-        }
-
-        // Calculate the end index without exceeding the array length
-        uint256 end = offset + limit;
-        if (end > len) {
-            end = len;
-        }
-
-        uint256 size = end - offset;
-        orders = new OutputOrder[](size);
-
-        // Copy each element from storage into memory
-        for (uint256 i; i < size; ++i) {
-            Order storage order = list[offset + i];
-            uint80 userID = order.userID;
-            orders[i] = OutputOrder({
-                id: offset + i,
-                trader: userAddresses[userID],
-                userID: userID,
-                price: order.price,
-                quantity: order.quantity
-            });
-        }
-    }
-
-    /// @notice Return the total number of buy orders for a market
-    function getBuyOrdersLength(uint256 marketID) external view returns (uint256) {
-        return buyOrders[marketID].length;
     }
 
 }

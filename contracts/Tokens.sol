@@ -17,6 +17,7 @@ abstract contract Tokens is GeniDexBase {
         string calldata manualSymbol,
         uint8 manualDecimals
     ) external onlyRole(OPERATOR_ROLE) {
+        Storage.TokenData storage t = Storage.token();
         // if (tokenAddress == address(0)) revert Helper.InvalidTokenAddress();
         // if (isTokenListed[tokenAddress]) revert Helper.TokenAlreadyListed(tokenAddress);
 
@@ -45,7 +46,7 @@ abstract contract Tokens is GeniDexBase {
             decimals = manualDecimals;
         }
 
-        tokens[tokenAddress] = Token({
+        t.tokens[tokenAddress] = Storage.Token({
             symbol: symbol,
             usdMarketID: usdMarketID,
             minOrderAmount: minOrderAmount,
@@ -54,53 +55,31 @@ abstract contract Tokens is GeniDexBase {
             isUSD: isUSD
         });
 
-        isTokenListed[tokenAddress] = true;
+        t.isListed[tokenAddress] = true;
 
         emit TokenListed(tokenAddress, symbol);
     }
 
     function updateTokenIsUSD(address tokenAddress, bool isUSD) external onlyRole(OPERATOR_ROLE){
-        tokens[tokenAddress].isUSD = isUSD;
+        Storage.TokenData storage t = Storage.token();
+        t.tokens[tokenAddress].isUSD = isUSD;
     }
 
     function updateUSDMarketID(address tokenAddress, uint80 marketID) external onlyRole(OPERATOR_ROLE){
-        tokens[tokenAddress].usdMarketID = marketID;
+        Storage.TokenData storage t = Storage.token();
+        t.tokens[tokenAddress].usdMarketID = marketID;
     }
 
     function updateMinOrderAmount(address tokenAddress, uint80 minOrderAmount) external onlyRole(OPERATOR_ROLE){
-        tokens[tokenAddress].minOrderAmount = minOrderAmount;
+        Storage.TokenData storage t = Storage.token();
+        t.tokens[tokenAddress].minOrderAmount = minOrderAmount;
     }
 
     function updateMinTransferAmount(address tokenAddress, uint80 minTransferAmount) external onlyRole(OPERATOR_ROLE){
-        tokens[tokenAddress].minTransferAmount = minTransferAmount;
+        Storage.TokenData storage t = Storage.token();
+        t.tokens[tokenAddress].minTransferAmount = minTransferAmount;
     }
 
-    struct TokenInfo {
-        address tokenAddress;
-        string symbol;
-        uint80 usdMarketID;
-        uint80 minOrderAmount;
-        uint80 minTransferAmount;
-        uint8 decimals;
-        bool isUSD;
-    }
-
-    function getTokensInfo(address[] calldata tokenAddresses) external view returns (TokenInfo[] memory) {
-        uint256 length = tokenAddresses.length;
-        TokenInfo[] memory result = new TokenInfo[](length);
-        for (uint256 i = 0; i < length; i++) {
-            Token memory info = tokens[tokenAddresses[i]];
-            result[i] = TokenInfo({
-                tokenAddress: tokenAddresses[i],
-                symbol: info.symbol,
-                usdMarketID: info.usdMarketID,
-                minOrderAmount: info.minOrderAmount,
-                minTransferAmount: info.minTransferAmount,
-                decimals: info.decimals,
-                isUSD: info.isUSD
-            });
-        }
-        return result;
-    }
+    
 
 }

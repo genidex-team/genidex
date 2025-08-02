@@ -3,16 +3,23 @@
     "solidity.packageDefaultDependenciesContractsDirectory": "",
     "solidity.packageDefaultDependenciesDirectory": "node_modules",
     "cSpell.words": [
+        "calldatacopy",
+        "calldatasize",
         "chainid",
+        "delegatecall",
         "gasleft",
         "genidex",
         "Initializable",
+        "iszero",
         "keccak",
         "Merkle",
         "mstore",
         "Reentrancy",
         "remappings",
+        "returndatacopy",
+        "returndatasize",
         "sourcify",
+        "staticcall",
         "UPGRADER",
         "UUPS"
     ]
