@@ -19,7 +19,7 @@ module.exports = {
     runOnCompile: true,
     disambiguatePaths: false,
     strict: true,
-    only: ['GeniDex']
+    only: ['Diamond', 'Facet', 'GeniAccessManager']
   },
   solidity: {
     compilers: [
