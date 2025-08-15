@@ -26,8 +26,8 @@ async function main() {
     describe('Test Balances', () => {
         it("Deployed", async ()=>{
             // geniDexContract = await geniDexHelper.deploy();
-            geniDexContract = await geniDexHelper.upgrade();
-            geniDexAddress = geniDexContract.target;
+            // geniDexContract = await geniDexHelper.upgrade();
+            // geniDexAddress = geniDexContract.target;
             await geniDexHelper.init();
             await wallet1.init();
             await wallet2.init();
@@ -45,11 +45,11 @@ async function main() {
             expect(wallet1.walletBalance).to.equal(await wallet1.getWalletBalance());
             expect(wallet1.geniDexBalance).to.equal(await wallet1.getGeniDexBalance());
 
-            // await wallet2.deposit("10");
-            // expect(wallet2.walletBalance).to.equal(await wallet2.getWalletBalance());
-            // expect(wallet2.geniDexBalance).to.equal(await wallet2.getGeniDexBalance());
+            await wallet2.deposit("10");
+            expect(wallet2.walletBalance).to.equal(await wallet2.getWalletBalance());
+            expect(wallet2.geniDexBalance).to.equal(await wallet2.getGeniDexBalance());
 
-            await wallet1.withdraw("1");
+            await wallet1.withdraw("10");
             expect(wallet1.walletBalance).to.equal(await wallet1.getWalletBalance());
             expect(wallet1.geniDexBalance).to.equal(await wallet1.getGeniDexBalance());
 

@@ -3,21 +3,13 @@ pragma solidity ^0.8.24;
 
 import "../Storage.sol";
 import "../Helper.sol";
+import "../libraries/LibAccessManaged.sol";
 
-contract MarketFacet {
-
-    function _getTokenMeta(address tokenAddress) internal view returns (string memory symbol, uint8 decimals) {
-        Storage.TokenData storage t = Storage.token();
-        Storage.Token storage info = t.tokens[tokenAddress];
-        if(!t.isListed[tokenAddress]){
-            revert Helper.TokenNotListed(tokenAddress);
-        }
-        return (info.symbol, info.decimals);
-    }
+contract MarketFacet is LibAccessManaged {
 
     function addMarket(
         address baseAddress, address quoteAddress
-    ) external {
+    ) external restricted {
         Storage.MarketData storage m = Storage.market();
 
         string memory baseSymbol;
@@ -47,14 +39,23 @@ contract MarketFacet {
 
     }
 
+    function updateMarketIsRewardable(uint256 marketId, bool isRewardable) external restricted{
+        Storage.MarketData storage m = Storage.market();
+        m.markets[marketId].isRewardable = isRewardable;
+    }
+
     function generateMarketHash(address baseAddress, address quoteAddress) public pure returns (bytes32) {
         bytes32 hash = keccak256(abi.encodePacked(baseAddress, quoteAddress));
         return hash;
     }
 
-    function updateMarketIsRewardable(uint256 marketId, bool isRewardable) external {
-        Storage.MarketData storage m = Storage.market();
-        m.markets[marketId].isRewardable = isRewardable;
+    function _getTokenMeta(address tokenAddress) internal view returns (string memory symbol, uint8 decimals) {
+        Storage.TokenData storage t = Storage.token();
+        Storage.Token storage info = t.tokens[tokenAddress];
+        if(!t.isListed[tokenAddress]){
+            revert Helper.TokenNotListed(tokenAddress);
+        }
+        return (info.symbol, info.decimals);
     }
 
 }

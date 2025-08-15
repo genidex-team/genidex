@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "../Storage.sol";
 import "../Helper.sol";
+import "../libraries/LibAccessManaged.sol";
 
-contract TokenFacet is AccessManagedUpgradeable {
+contract TokenFacet is LibAccessManaged {
 
     event TokenListed(address indexed token, string symbol);
 
@@ -63,22 +63,22 @@ contract TokenFacet is AccessManagedUpgradeable {
         emit TokenListed(tokenAddress, symbol);
     }
 
-    function updateTokenIsUSD(address tokenAddress, bool isUSD) external{
+    function updateTokenIsUSD(address tokenAddress, bool isUSD) external restricted{
         Storage.TokenData storage t = Storage.token();
         t.tokens[tokenAddress].isUSD = isUSD;
     }
 
-    function updateUSDMarketID(address tokenAddress, uint80 marketID) external{
+    function updateUSDMarketID(address tokenAddress, uint80 marketID) external restricted{
         Storage.TokenData storage t = Storage.token();
         t.tokens[tokenAddress].usdMarketID = marketID;
     }
 
-    function updateMinOrderAmount(address tokenAddress, uint80 minOrderAmount) external{
+    function updateMinOrderAmount(address tokenAddress, uint80 minOrderAmount) external restricted{
         Storage.TokenData storage t = Storage.token();
         t.tokens[tokenAddress].minOrderAmount = minOrderAmount;
     }
 
-    function updateMinTransferAmount(address tokenAddress, uint80 minTransferAmount) external{
+    function updateMinTransferAmount(address tokenAddress, uint80 minTransferAmount) external restricted{
         Storage.TokenData storage t = Storage.token();
         t.tokens[tokenAddress].minTransferAmount = minTransferAmount;
     }

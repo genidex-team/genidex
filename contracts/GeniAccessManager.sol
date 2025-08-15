@@ -4,8 +4,6 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/access/manager/AccessManager.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-/// @title GeniAccessManager
-/// @notice AccessManager + on-chain role enumeration
 contract GeniAccessManager is AccessManager {
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -14,10 +12,9 @@ contract GeniAccessManager is AccessManager {
     mapping(uint64 => EnumerableSet.AddressSet) private _roleMembers;
     EnumerableSet.UintSet private _allRoles;
 
-    constructor(address initialAdmin) AccessManager(initialAdmin) {
-        _roleMembers[ADMIN_ROLE].add(initialAdmin);
+    constructor() AccessManager(msg.sender) {
+        _roleMembers[ADMIN_ROLE].add(msg.sender);
         _allRoles.add(ADMIN_ROLE);
-        _allRoles.add(PUBLIC_ROLE);
     }
 
     /* ---------- write ---------- */
@@ -107,5 +104,23 @@ contract GeniAccessManager is AccessManager {
             roles[i] = uint64(_allRoles.at(i));
         }
         return roles;
+    }
+
+    struct SelectorRole {
+        bytes4 selector;
+        uint64 roleId;
+    }
+
+    function getTargetFunctionRoles(address target, bytes4[] calldata selectors) external view returns (SelectorRole[] memory roleIds) {
+        uint256 len = selectors.length;
+        roleIds = new SelectorRole[](len);
+
+        for (uint256 i; i < len; ) {
+            roleIds[i] = SelectorRole({
+                selector: selectors[i],
+                roleId: getTargetFunctionRole(target, selectors[i])
+            });
+            unchecked { ++i; }
+        }
     }
 }

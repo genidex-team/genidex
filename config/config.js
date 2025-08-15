@@ -15,7 +15,7 @@ const apiSocket = io("http://localhost:3000/", {
 class Config{
 
     genidexSDK = new GeniDex();
-    adminSDK;
+    adminSDK = new Admin(this.genidexSDK);
 
     async init(){
         const rpc = data.getRPC(network.name);
@@ -30,4 +30,5 @@ async function main(){
     await config.init();
 }
 main();
+
 module.exports = config;

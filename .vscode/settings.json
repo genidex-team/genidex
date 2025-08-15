@@ -4,6 +4,7 @@
     "solidity.packageDefaultDependenciesDirectory": "node_modules",
     "cSpell.words": [
         "calldatacopy",
+        "calldataload",
         "calldatasize",
         "chainid",
         "delegatecall",

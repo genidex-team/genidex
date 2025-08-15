@@ -42,9 +42,9 @@ async function main() {
     describe('Trade', () => {
         it("Deployed", async ()=>{
             // geniDexContract = await geniDexHelper.deploy();
-            geniDexContract = await geniDexHelper.upgrade();
+            // geniDexContract = await geniDexHelper.upgrade();
             // geniDexContract = await geniDexHelper.getContract();
-            geniDexAddress = geniDexContract.target;
+            // geniDexAddress = geniDexContract.target;
             await geniDexHelper.init();
             await tokenWalletHelper.init();
             await ordersHelper.init();

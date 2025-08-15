@@ -3,11 +3,11 @@
 
 pragma solidity ^0.8.20;
 
-import {IAuthority} from "@openzeppelin/contracts/access/manager/IAuthority.sol";
+// import {IAuthority} from "@openzeppelin/contracts/access/manager/IAuthority.sol";
 import {AuthorityUtils} from "@openzeppelin/contracts/access/manager/AuthorityUtils.sol";
 import {IAccessManager} from "@openzeppelin/contracts/access/manager/IAccessManager.sol";
 // import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-// import {ContextUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import {ContextUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 // import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
@@ -18,30 +18,23 @@ import {IAccessManager} from "@openzeppelin/contracts/access/manager/IAccessMana
  * IMPORTANT: The `restricted` modifier should never be used on `internal` functions, judiciously used in `public`
  * functions, and ideally only used in `external` functions. See {restricted}.
  */
-library LibAccess {
+abstract contract LibAccessManaged is ContextUpgradeable {
+
     error AccessManagedUnauthorized(address caller);
+
     /// @custom:storage-location erc7201:openzeppelin.storage.AccessManaged
     struct AccessManagedStorage {
         address _authority;
-
         bool _consumingSchedule;
     }
 
     // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.AccessManaged")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant AccessManagedStorageLocation = 0xf3177357ab46d8af007ab3fdb9af81da189e1068fefdc0073dca88a2cab40a00;
 
-    function _getAccessManagedStorage() internal pure returns (AccessManagedStorage storage $) {
+    function _getAccessManagedStorage() private pure returns (AccessManagedStorage storage $) {
         assembly {
             $.slot := AccessManagedStorageLocation
         }
-    }
-
-    function _msgSender() internal view returns (address) {
-        return msg.sender;
-    }
-
-    function _msgData() internal pure returns (bytes calldata) {
-        return msg.data;
     }
 
     /**
@@ -73,7 +66,7 @@ library LibAccess {
         _;
     }
 
-    function _authority() internal view returns (address) {
+    function _authority() internal view virtual returns (address) {
         AccessManagedStorage storage $ = _getAccessManagedStorage();
         return $._authority;
     }
@@ -82,7 +75,7 @@ library LibAccess {
      * @dev Reverts if the caller is not allowed to call the function identified by a selector. Panics if the calldata
      * is less than 4 bytes long.
      */
-    function _checkCanCall(address caller, bytes calldata data) internal {
+    function _checkCanCall(address caller, bytes calldata data) internal virtual {
         AccessManagedStorage storage $ = _getAccessManagedStorage();
         (bool immediate, uint32 delay) = AuthorityUtils.canCallWithDelay(
             _authority(),

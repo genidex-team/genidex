@@ -3,8 +3,9 @@ const { ethers, upgrades, network, run } = require('hardhat');
 const path = require('path');
 const fs = require('fs')
 const fn = require('./functions');
-
 const data = require('geni_data');
+
+const genidexAbi = require('../data/abis/genidex.full.abi.json');
 
 class GeniDexError extends Error {
     constructor(message, data) {
@@ -122,7 +123,7 @@ class GeniDexHelper{
     async getContract(){
         const geniDexAddress = data.getGeniDexAddress(network.name);
         console.log('geniDexAddress', geniDexAddress)
-        return await ethers.getContractAt('GeniDex', geniDexAddress);
+        return await ethers.getContractAt(genidexAbi, geniDexAddress);
     }
 
     async verify(address){

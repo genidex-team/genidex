@@ -63,7 +63,6 @@ library Storage {
     }
 
     /* ---------------- 1. CORE ---------------- */
-    /// @custom:storage-location erc7201:genidex.storage.core
     struct CoreConfig {
         address reader;
     }
@@ -71,7 +70,6 @@ library Storage {
     bytes32 constant _CORE_SLOT = 0x9a2e2e549586904174bdcd8d8726c6c9b7a607d07b338753388784501a2ed200;
 
     /* ---------------- 2. MARKET ---------------- */
-    /// @custom:storage-location erc7201:genidex.storage.market
     struct MarketData {
         mapping(uint256 => Market)  markets;     // marketId → Market
         mapping(uint256 => Order[]) buyOrders;   // marketId → bids
@@ -83,7 +81,6 @@ library Storage {
     bytes32 constant _MARKET_SLOT = 0x0b1393fbf50210466d6f1d484abc24369b62c4f18d8c4568f5a7eaf7736a1800;
 
     /* ---------------- 3. TOKEN ---------------- */
-    /// @custom:storage-location erc7201:genidex.storage.token
     struct TokenData {
         mapping(address => Token) tokens;   // tokenAddr → config
         mapping(address => bool)  isListed; // whitelist flag
@@ -92,7 +89,6 @@ library Storage {
     bytes32 constant _TOKEN_SLOT = 0xc2a5ee3dbbbbe6cafe347d1ab8d97af8ab3e7dab55fdc3322ef0d694071c0200;
 
     /* ---------------- 4. USER ---------------- */
-    /// @custom:storage-location erc7201:genidex.storage.user
     struct UserData {
         // balances[userID][token] → amount
         mapping(uint80 => mapping(address => uint256)) balances;

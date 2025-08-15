@@ -36,8 +36,9 @@ function getSelector (func) {
 function remove (functionNames) {
   const selectors = this.filter((v) => {
     for (const functionName of functionNames) {
-      if (v === this.contract.interface.getSighash(functionName)) {
-        return false
+      const selector = this.contract.interface.getFunction(functionName)?.selector;
+      if (v === selector) {
+        return false;
       }
     }
     return true
@@ -53,7 +54,7 @@ function remove (functionNames) {
 function get (functionNames) {
   const selectors = this.filter((v) => {
     for (const functionName of functionNames) {
-      if (v === this.contract.interface.getSighash(functionName)) {
+      if (v === this.contract.interface.getFunction(functionName).selector ) {
         return true
       }
     }
@@ -110,6 +111,27 @@ function formatFacets(abi, facets, format='full'){
   return result;
 }
 
+function getFilenames(dirPath, extensions) {
+  const files = fs.readdirSync(dirPath);
+  const filtered = files
+    .filter(file => {
+      const filePath = path.join(dirPath, file);
+      return (
+        fs.statSync(filePath).isFile() &&
+        extensions.includes(path.extname(file).toLowerCase())
+      );
+    })
+    .map(file => path.parse(file).name);
+  return filtered;
+}
+
+function getFacetNames(){
+  const dir = path.join(__dirname, '../../contracts/facets');
+  const FacetNames = getFilenames(dir, ['.sol']);
+  return FacetNames;
+}
+
+exports.getFacetNames = getFacetNames
 exports.formatFacets = formatFacets
 exports.getSelectors = getSelectors
 exports.getSelector = getSelector

@@ -39,15 +39,16 @@ echo "   ➤ Gas price     : ${propose_gas_price} gwei"
     # --fork-url "https://mainnet.infura.io/v3/$INFURA_API_KEY" \
     # --gas-price 35000000000 \
     # --base-fee 30000000000 \
+    # --base-fee "$base_fee_wei" \
     # --initial-base-fee 30000000000 \
 
 anvil \
     --fork-url "https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}" \
     --fork-block-number 22802033 \
-    --chain-id 1 \
+    --chain-id 31337 \
     --threads 8 \
     --memory-limit 1073741824 \
+    --mnemonic "$MNEMONIC" \
     --accounts 30 --balance 1000 \
-    --base-fee "$base_fee_wei" \
     --gas-price "$gas_price_wei" \
     --gas-limit 30000000

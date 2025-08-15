@@ -8,13 +8,13 @@ const {utils} = require("genidex-sdk")
 const {Admin} = require("genidex-sdk/admin")
 const config = require('../../config/config');
 let adminSDK;
-let owner;
+let owner, upgrader, pauser, operator;
 
 async function main () {
 
   await config.init();
   adminSDK = config.adminSDK;
-  [owner] = await ethers.getSigners();
+  [owner, upgrader, pauser, operator] = await ethers.getSigners();
 
   // const geniDexContract = await geniDexHelper.upgrade();
   let geniTokenAddress = dataV2.getGeniTokenAddress(network.name)
@@ -28,12 +28,24 @@ async function main () {
   // let markets = await config.genidexSDK.markets.getAllMarkets();
   // console.log('markets', markets);
 
-  await listToken(ethers.ZeroAddress); // list ETH
-  await listToken(geniTokenAddress)
-  await listToken(bnbAddress)
-  await listToken(arbAddress)
-  await listToken(usdtAddress)
-  await listToken(daiAddress)
+  // await listToken(ethers.ZeroAddress); // list ETH
+  // await listToken(geniTokenAddress)
+  // await listToken(bnbAddress)
+  // await listToken(arbAddress)
+  // await listToken(usdtAddress)
+  // await listToken(daiAddress)
+
+  await adminSDK.updateTokenIsUSD({
+    signer: operator,
+    tokenAddress: usdtAddress,
+    isUSD: true
+  })
+
+  await adminSDK.updateTokenIsUSD({
+    signer: operator,
+    tokenAddress: daiAddress,
+    isUSD: true
+  })
 
   process.exit();
 
@@ -44,7 +56,7 @@ async function listToken(tokenAddress){
   let minOrderAmount = utils.parseBaseUnit("10");
   try{
     let tx = await adminSDK.listToken({
-      signer: owner,
+      signer: operator,
       tokenAddress,
       minTransferAmount,
       minOrderAmount

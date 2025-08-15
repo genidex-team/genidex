@@ -7,11 +7,11 @@ const data = require('geni_data');
 const abi = require('../../data/abis/genidex.full.abi.json');
 
 async function main () {
-  const accounts = await ethers.getSigners()
+  const [deployer, upgrader] = await ethers.getSigners()
   const facetCuts   = await deployFacets();
 
   const genidexAddr = data.getGeniDexAddress(network.name);
-  const diamond = await ethers.getContractAt(abi, genidexAddr);
+  const diamond = await ethers.getContractAt(abi, genidexAddr, upgrader);
   // const diamond = new ethers.Contract(genidexAddr, abi, accounts[0]);
   // console.log(diamond.interface); process.exit()
 
@@ -30,7 +30,7 @@ async function deployFacets(){
   // Deploy facets and set the `facetCuts` variable
   console.log('Deploying facets')
   const FacetNames = [
-    'TokenFacet'
+    'BalanceFacet'
   ]
   // The `facetCuts` variable is the FacetCut[] that contains the functions to add during diamond deployment
   const facetCuts = []
@@ -40,18 +40,33 @@ async function deployFacets(){
     await facet.waitForDeployment()
     console.log(`${FacetName} deployed: ${facet.target}`)
     // console.log(facet.interface.fragments)
+    const selectors = getSelectors(facet);
+    // console.log(selectors);
 
-    facetCuts.push({
-      facetAddress: ethers.ZeroAddress,
-      action: FacetCutAction.Remove,
-      functionSelectors: getSelectors(facet)
-    })
-  
+    // const removeSelectors = selectors.remove(['getUserAddress', 'getUserID']);
+    // console.log(removeSelectors)
+    // facetCuts.push({
+    //   facetAddress: ethers.ZeroAddress,
+    //   action: FacetCutAction.Remove,
+    //   functionSelectors: removeSelectors
+    // })
+
+    const replaceSelectors = selectors.remove(['updateFeeReceiver']);
+    // console.log(replaceSelectors)
     facetCuts.push({
       facetAddress: facet.target,
-      action: FacetCutAction.Add,
-      functionSelectors: getSelectors(facet)
+      action: FacetCutAction.Replace,
+      functionSelectors: selectors
     })
+
+    // const addSelectors = selectors.get(['updateFeeReceiver']);
+    // // console.log(addSelectors)
+    // facetCuts.push({
+    //   facetAddress: facet.target,
+    //   action: FacetCutAction.Add,
+    //   functionSelectors: addSelectors
+    // })
+
   }
   return facetCuts;
 }

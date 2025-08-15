@@ -5,10 +5,12 @@ const geniDexHelper = require('../helpers/genidex.h');
 const Market = require('../helpers/market.h');
 const ordersHelper = require('../helpers/orders.h');
 const data = require('../helpers/data');
-
+const {utils} = require('genidex-sdk')
+const config = require('../config/config');
+const sdk = config.genidexSDK;
 var marketId = 1;
 var market, price, quantity;
-var owner, trader1, trader2, trader3, referrer, user, otherUser, user3;
+var owner, upgrader, pauser, operator, referrer, user, user2, user3;
 var genidex, geniDexAddress;
 
 describe("GeniDex - Pause Functionality", function () {
@@ -16,41 +18,39 @@ describe("GeniDex - Pause Functionality", function () {
     before(async () => {
         await geniDexHelper.init();
         await ordersHelper.init();
+        market = await sdk.markets.getMarket(marketId);
+        console.table(market);
 
-        [owner, referrer, user, otherUser, user3] = await ethers.getSigners();
+        [owner, upgrader, pauser, operator, referrer, user, user2, user3] = await ethers.getSigners();
         genidex = await geniDexHelper.getContract();
         // genidex = await geniDexHelper.upgrade();
         // genidex = await geniDexHelper.deploy();
-        geniDexAddress = genidex.target;
+        // geniDexAddress = genidex.target;
+        price = utils.parseBaseUnit(0.1);
+        quantity = utils.parseBaseUnit(100);
 
-        market = new Market(marketId);
-        price = market.parsePrice(0.000025);
-        quantity = market.parseQuantity(1);
-
-        await ensureUnpaused(genidex, owner);
+        await ensureUnpaused(genidex, pauser);
 
     });
 
     it("Should allow owner to pause and unpause", async () => {
         // Pause
-        await expect(genidex.connect(owner).pause())
+        await expect(sdk.pause(pauser))
             .to.emit(genidex, "Paused")
-            .withArgs(owner.address);
+            .withArgs(pauser.address);
 
         // Unpause
-        await expect(genidex.connect(owner).unpause())
+        await expect(sdk.unpause(pauser))
             .to.emit(genidex, "Unpaused")
-            .withArgs(owner.address);
+            .withArgs(pauser.address);
     });
-
     it("Should NOT allow non-owner to pause", async () => {
-        await expect(genidex.connect(user).pause())
-            .to.be.revertedWithCustomError(genidex, "OwnableUnauthorizedAccount")
+        await expect(sdk.pause(user))
+            .to.be.revertedWithCustomError(genidex, "AccessManagedUnauthorized")
             .withArgs(user.address);
     });
-
     it("Should block placeBuyOrder and placeSellOrder when paused", async () => {
-        await genidex.connect(owner).pause();
+        await sdk.pause(pauser);
         await expect(
             buy(user, price, quantity, referrer.address)
         ).to.be.rejectedWith('EnforcedPause');
@@ -60,7 +60,22 @@ describe("GeniDex - Pause Functionality", function () {
     });
 
     it("Should allow placeBuyOrder and placeSellOrder when not paused", async () => {
-        await genidex.connect(owner).unpause(); // in case default is paused
+        await sdk.unpause(pauser); // in case default is paused
+        await expect(
+            sdk.balances.depositToken({
+                signer: user,
+                tokenAddress: market.quoteAddress,
+                normAmount: utils.parseBaseUnit('1000')
+            })
+        ).to.not.be.reverted;
+        await expect(
+            sdk.balances.depositToken({
+                signer: user,
+                tokenAddress: market.baseAddress,
+                normAmount: utils.parseBaseUnit('1000')
+            })
+        ).to.not.be.reverted;
+
         await expect(
             buy(user, price, quantity, referrer.address)
         ).to.not.be.reverted;
@@ -82,6 +97,6 @@ async function sell(trader, price, quantity, referrer) {
 async function ensureUnpaused(contract, signer) {
     const isPaused = await contract.paused();
     if (isPaused) {
-        await contract.connect(signer).unpause();
+        await sdk.unpause(signer);
     }
 }

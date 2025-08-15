@@ -177,7 +177,7 @@ class BuyOrdersHelper {
     async getBuyOrders(marketId) {
         let market = markets.getMarket(marketId);
         try{
-            let buyOrderData = await geniDexContract.getBuyOrders(marketId);
+            let buyOrderData = await genidexSDK.buyOrders.getAllBuyOrders(marketId);
             var buyOrders = [];
             for (var id in buyOrderData) {
                 let buyOrder = buyOrderData[id];
@@ -185,6 +185,7 @@ class BuyOrdersHelper {
                     id: parseInt(id),
                     price: buyOrder.price,
                     quantity: buyOrder.quantity,
+                    trader: buyOrder.trader
                     // total: ethers.formatUnits(buyOrder.price * buyOrder.quantity, market.totalDecimals)
                 });
             }
@@ -196,7 +197,7 @@ class BuyOrdersHelper {
     }
 
     async getSellOrders(marketId) {
-        let sellOrderData = await geniDexContract.getSellOrders(marketId);
+        let sellOrderData = await genidexSDK.sellOrders.getAllSellOrders(marketId);
         var sellOrders = [];
         for (var id in sellOrderData) {
             let item = sellOrderData[id];
@@ -361,7 +362,13 @@ class BuyOrdersHelper {
         for(var i in sellOrders){
             var sellOrder = sellOrders[i];
             if(sellOrder.quantity>0){
-                await this.cancelSellOrder(trader2, marketId, sellOrder.id);
+                const signer = await ethers.getSigner(sellOrder.trader);
+                await genidexSDK.sellOrders.cancelSellOrder({
+                    signer: signer,
+                    marketId: marketId,
+                    orderIndex: sellOrder.id
+                })
+                // await this.cancelSellOrder(trader2, marketId, sellOrder.id);
             }
         }
         sellOrders = await this.getSellOrders(marketId);
@@ -376,7 +383,13 @@ class BuyOrdersHelper {
         for(var i in buyOrders){
             var buyOrder = buyOrders[i];
             if(buyOrder.quantity>0){
-                await this.cancelBuyOrder(trader1, marketId, buyOrder.id);
+                //await this.cancelBuyOrder(trader1, marketId, buyOrder.id);
+                const signer = await ethers.getSigner(buyOrder.trader);
+                await genidexSDK.buyOrders.cancelBuyOrder({
+                    signer: signer,
+                    marketId: marketId,
+                    orderIndex: buyOrder.id
+                })
             }
         }
         buyOrders = await this.getBuyOrders(marketId);

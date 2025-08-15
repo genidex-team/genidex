@@ -10,9 +10,10 @@ const fn = require('../helpers/functions');
 const tokenWalletHelper = require('../helpers/token.wallet.h');
 const EthWalletHelper = require('../helpers/eth.wallet.h');
 const ordersHelper = require('../helpers/orders.h');
-const Market = require('../helpers/market.h');
 const pointsHelper = require('../helpers/points.h');
-
+const {utils, constants} = require('genidex-sdk')
+const config = require('../config/config');
+const sdk = config.genidexSDK;
 
 var geniDexContract;
 var marketId;
@@ -22,23 +23,23 @@ var price, quantity, total;
 async function main() {
 
     before(async ()=>{
-        [deployer, trader1, trader2, feeReceiver] = await ethers.getSigners();
+        [deployer, upgrader, pauser, operator,  trader1, trader2, feeReceiver] = await ethers.getSigners();
         // console.log('feeReceiver', feeReceiver.address);
-        marketId = 1;
-        market = new Market(marketId);
+        marketId = 3;
         // console.log(market);
-        price = market.parsePrice('2500');
-        quantity = market.parseQuantity('1');
-        total = market.total(price, quantity);
+        price = utils.parseBaseUnit('0.5');
+        quantity = utils.parseBaseUnit('200');
+        total = utils.total(price, quantity);
         geniDexHelper.init();
+        market = await sdk.markets.getMarket(marketId);
     });
 
     describe('Trade', () => {
         it("Deployed", async ()=>{
             // geniDexContract = await geniDexHelper.deploy();
-            geniDexContract = await geniDexHelper.upgrade();
+            // geniDexContract = await geniDexHelper.upgrade();
             // geniDexContract = await geniDexHelper.getContract();
-            geniDexAddress = geniDexContract.target;
+            // geniDexAddress = geniDexContract.target;
             await tokenWalletHelper.init();
             await ordersHelper.init();
         });
@@ -58,13 +59,14 @@ async function main() {
             console.log(price, quantity)
             await buy(price, quantity);
 
-            total = market.total(sellPrice, quantity);
-            let points = await market.toPoints(total);
+            total = utils.total(sellPrice, quantity);
+            let points = await toPoints(total);
             console.log(
                 formatPoint(points1), '+',
                 formatPoint(points), '=',
                 formatPoint(await gPoints1())
             );
+            console.log('==================', points1, points)
             expect(points1 + points).to.equal(await gPoints1());
             expect(points2).to.equal(await gPoints2());
 
@@ -85,8 +87,8 @@ async function main() {
             await buy(buyPrice, quantity);
             await sell(price, quantity);
 
-            total = market.total(buyPrice, quantity);
-            let points = await market.toPoints(total);
+            total = utils.total(buyPrice, quantity);
+            let points = await toPoints(total);
             console.log(
                 formatPoint(points2), '+',
                 formatPoint(points), '=',
@@ -99,6 +101,22 @@ async function main() {
         })
 
     });
+}
+
+async function toPoints(amount){
+    let quoteAddress = market.quoteAddress;
+    let quoteToken = await sdk.tokens.getTokenInfo(quoteAddress);
+    // console.log(quoteToken)
+    let points = 0n;
+    if(market.isRewardable!=true) return 0n;
+
+    if(quoteToken.isUSD == true){
+        points = amount;
+    }else if(quoteToken.usdMarketID > 0){
+        let usdMarket = await sdk.markets.getMarket(quoteToken.usdMarketID); //markets.getMarket(quoteToken.usdMarketID);
+        points = usdMarket.price * amount / constants.BASE_UNIT;
+    }
+    return points;
 }
 
 async function gPoints1(){

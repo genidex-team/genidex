@@ -23,9 +23,9 @@ async function main() {
     
     before(async ()=>{
         // geniDexContract = await geniDexHelper.deploy();
-        geniDexContract = await geniDexHelper.upgrade();
+        // geniDexContract = await geniDexHelper.upgrade();
         // geniDexContract = await geniDexHelper.getContract();
-        geniDexAddress = geniDexContract.target;
+        // geniDexAddress = geniDexContract.target;
 
         await geniDexHelper.init();
         await tokenWalletHelper.init();
@@ -119,7 +119,7 @@ async function testPlaceSellOrder(){
 
     let buyOrders = [];
     for(var i=0; i<10; i++){
-        console.log(i);
+        // console.log(i);
         // await buy(price, quantity);
         await sell(price, quantity);
     }

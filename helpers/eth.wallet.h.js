@@ -3,6 +3,8 @@ const expect = require('chai').expect;
 const { ethers, upgrades, waffle } = require('hardhat');
 const geniDexHelper = require('./genidex.h');
 const fn = require('./functions');
+const config = require('../config/config');
+const {utils} = require('genidex-sdk');
 
 const provider = ethers.provider;
 // var deployer, trader1, trader2;
@@ -15,12 +17,14 @@ class EthWalletHelper{
     walletBalance;
     geniDexBalance;
     account;
+    address;
 
     constructor(_account){
         this.account = _account;
     }
 
     async init(){
+        this.address = await this.account.getAddress();
         this.geniDexContract = await geniDexHelper.getContract();
         // [deployer, trader1, trader2] = await ethers.getSigners();
         this.walletBalance = await this.getWalletBalance();
@@ -28,21 +32,27 @@ class EthWalletHelper{
     }
 
     addWeiFee(fee){
+        // const normFee = utils.convertDecimals(fee, 18, 8);
         this.totalFee += fee;
         this.walletBalance -= fee;
     }
 
     async deposit(amount){
-        var _amount = ethers.parseEther(amount);
-        let transaction = await this.geniDexContract.connect(this.account).depositEth({value: _amount});
+        // var _amount = ethers.parseEther(amount);
+        // let transaction = await this.geniDexContract.connect(this.account).depositEth({value: _amount});
+        var normAmount = utils.parseBaseUnit(amount);
+        let transaction = await config.genidexSDK.balances.depositEth({
+            signer: this.account,
+            normAmount: normAmount
+        })
         fn.printGasUsed(transaction, '\ndeposit '+amount+' ETH');
         let weiFee = await this.getWeiFee(transaction);
         // console.log('_amount', _amount);
         // console.log('weiFee', weiFee);
         // console.log(`walletBalance: ${this.walletBalance} - ${_amount} - ${weiFee} = `);
         this.addWeiFee(weiFee);
-        this.walletBalance -= _amount;
-        this.geniDexBalance += _amount;
+        this.walletBalance -= utils.convertDecimals(normAmount, 8, 18);
+        this.geniDexBalance += utils.convertDecimals(normAmount, 8, 18);
         // console.log(`walletBalance: ${this.walletBalance}`);
     }
 
@@ -61,15 +71,21 @@ class EthWalletHelper{
     }
 
     async withdraw(amount){
-        let _amount = ethers.parseEther(amount);
-        let transaction = await this.geniDexContract.connect(this.account).withdrawEth(_amount);
-        // transaction = await geniDexContract.connect(trader1).withdrawEth2(amount);
-        // console.log(transaction);
+        // let _amount = ethers.parseEther(amount);
+        // let transaction = await this.geniDexContract.connect(this.account).withdrawEth(_amount);
+        
+        var normAmount = utils.parseBaseUnit(amount);
+        let transaction = await config.genidexSDK.balances.withdrawEth({
+            signer: this.account,
+            normAmount: normAmount
+        })
+
         fn.printGasUsed(transaction, '\nwithdraw '+amount+' ETH');
         let weiFee = await fn.getWeiFee(transaction);
         this.addWeiFee(weiFee);
-        this.walletBalance += _amount;
-        this.geniDexBalance -= _amount;
+        await transaction.wait();
+        this.walletBalance += utils.convertDecimals(normAmount, 8, 18);
+        this.geniDexBalance -= utils.convertDecimals(normAmount, 8, 18);
     }
 
     async checkwalletBalance(){
@@ -91,20 +107,22 @@ class EthWalletHelper{
     }
 
     async getWalletBalance(){
-        const balance = await provider.getBalance(this.account);
-        console.log('getWalletBalance', ethers.formatEther(balance).yellow);
-        return balance;
+        const rawBalance = await provider.getBalance(this.account);
+        // const normBalance = await utils.getETHBalanceInBaseUnit(provider, this.address);
+        console.log('getWalletBalance', ethers.formatEther(rawBalance).yellow);
+        return rawBalance;
     }
 
     async getGeniDexBalance(){
-        const balance = await this.geniDexContract.connect(this.account).getEthBalance();
-        console.log('getGeniDexBalance', ethers.formatEther(balance).yellow);
-        return balance;
+        const normBalance = await config.genidexSDK.balances.getETHBalance(this.address)
+        console.log('getGeniDexBalance', utils.formatBaseUnit(normBalance).yellow);
+        return utils.convertDecimals(normBalance, 8, 18);
     }
 
     async getEthBalance(){
-        const weiBalance = await provider.getBalance(this.account);
-        return ethers.formatEther(weiBalance);
+        const rawBalance = await provider.getBalance(this.account);
+        // const normBalance = await utils.getETHBalanceInBaseUnit(provider, this.address);
+        return ethers.formatEther(rawBalance);
     }
 
     async checkBalance1(amount){

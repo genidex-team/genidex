@@ -27,8 +27,8 @@ struct DiamondArgs {
 
 contract GeniDex {
 
-    constructor() {
-        LibDiamond.setContractOwner(msg.sender);
+    constructor(address owner) {
+        LibDiamond.setContractOwner(owner);
     }
 
     function init (

@@ -8,13 +8,13 @@ const {utils} = require("genidex-sdk")
 const {Admin} = require("genidex-sdk/admin")
 const config = require('../../config/config');
 let adminSDK;
-let owner;
+let owner, upgrader, pauser, operator;
 
 async function main () {
 
   await config.init();
   adminSDK = config.adminSDK;
-  [owner] = await ethers.getSigners();
+  [owner, upgrader, pauser, operator] = await ethers.getSigners();
 
   // const geniDexContract = await geniDexHelper.upgrade();
   let geniTokenAddress = dataV2.getGeniTokenAddress(network.name)
@@ -31,21 +31,27 @@ async function main () {
 
   // GENI_USDT - 1
   await addMarket(geniTokenAddress, usdtAddress);
+  await setMarketIsRewardable(1);
 
   // ETH_USDT - 2
   await addMarket(ethers.ZeroAddress, usdtAddress);
+  await setMarketIsRewardable(2);
 
   // GENI_ETH - 3
   await addMarket(geniTokenAddress, ethers.ZeroAddress);
+  await setMarketIsRewardable(3);
 
   // ARB_DAI - 4
   await addMarket(arbAddress, daiAddress);
+  await setMarketIsRewardable(4);
 
   // ARB_ETH - 5
   await addMarket(arbAddress, ethers.ZeroAddress);
+  await setMarketIsRewardable(5);
 
   // BNB_USDT - 6
   await addMarket(bnbAddress, usdtAddress);
+  await setMarketIsRewardable(6);
 
   // await geniDexContract.updateTokenIsUSD(usdtAddress, true);
   // await geniDexContract.updateTokenIsUSD(daiAddress, true);
@@ -65,9 +71,10 @@ async function main () {
 }
 
 async function addMarket(baseToken, quoteToken){
+  return;
   try{
     let tx = await adminSDK.addMarket({
-      signer: owner,
+      signer: operator,
       baseToken,
       quoteToken
     })
@@ -75,6 +82,10 @@ async function addMarket(baseToken, quoteToken){
   }catch(error){
     utils.logError(error)
   }
+}
+
+async function setMarketIsRewardable(marketId){
+  return await adminSDK.updateMarketIsRewardable({signer: operator, marketId: marketId, isRewardable: true})
 }
 
 

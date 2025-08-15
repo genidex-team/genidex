@@ -188,4 +188,14 @@ contract ReaderFacet {
         return result;
     }
 
+    function getUserAddress(uint80 userID) external view returns(address userAddress){
+        Storage.UserData storage u = Storage.user();
+        userAddress = u.userAddresses[userID];
+    }
+
+    function getUserID(address userAddress) external view returns(uint80 userID){
+        Storage.UserData storage u = Storage.user();
+        userID = u.userIDs[userAddress];
+    }
+
 }
